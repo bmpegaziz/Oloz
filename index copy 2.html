@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Coptic Scanner">
+  <meta name="theme-color" content="#f7f3e8">
+  <title>Coptic Festival QR Scanner</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      background: #f7f3e8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Georgia', serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 0.5rem;
+      margin: 0;
+    }
+
+    .app-container {
+      max-width: 500px;
+      width: 100%;
+      background: #fffef9;
+      border-radius: 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .app-header {
+      background: linear-gradient(180deg, #fffdf7 0%, #fef9ed 100%);
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 2px solid #d4a843;
+    }
+
+    .church-name {
+      font-family: 'Georgia', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #4e3b28;
+      text-transform: uppercase;
+    }
+
+    .sub-title {
+      font-size: 0.75rem;
+      color: #7b5e3b;
+      font-style: italic;
+    }
+
+    .scan-section {
+      padding: 0.8rem;
+      text-align: center;
+      background: #fdf8ed;
+      border-bottom: 2px solid #e0c98a;
+    }
+
+    .scan-btn {
+      background: #2d5e3b;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 2rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .scan-btn:active {
+      transform: scale(0.96);
+    }
+
+    .scan-btn.active {
+      background: #c0392b;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .scanner-view {
+      display: none;
+      margin-top: 0.5rem;
+      position: relative;
+    }
+
+    .scanner-view.active {
+      display: block;
+    }
+
+    .scanner-view video {
+      width: 100%;
+      border-radius: 1rem;
+      border: 2px solid #d4a843;
+    }
+
+    .scan-status {
+      font-size: 0.7rem;
+      color: #6b5a44;
+      margin-top: 0.3rem;
+      min-height: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #d4a843;
+      background: #fdf8ed;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.6rem 0.3rem;
+      text-align: center;
+      font-weight: 600;
+      color: #8b754f;
+      cursor: pointer;
+      font-size: 0.75rem;
+      border: none;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .tab.active {
+      color: #4e3b28;
+      border-bottom: 3px solid #b48b3a;
+      background: #fffef9;
+    }
+
+    .menu-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.3rem 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-panel {
+      display: none;
+      padding: 0 0.5rem;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0.3rem;
+      border-bottom: 1px dotted rgba(160, 120, 60, 0.2);
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .menu-item.just-scanned {
+      background: #fffde7;
+      animation: highlight 1s;
+    }
+
+    @keyframes highlight {
+      0% { background: #d4edda; }
+      100% { background: #fffde7; }
+    }
+
+    .item-code {
+      background: #4e3b28;
+      color: #f7f3e8;
+      font-weight: 700;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.5rem;
+      min-width: 35px;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+    }
+
+    .item-info {
+      flex: 1;
+      min-width: 90px;
+    }
+
+    .item-name {
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: #3f3322;
+      display: block;
+    }
+
+    .arabic-name {
+      font-size: 0.65rem;
+      color: #8b754f;
+      font-style: italic;
+      display: block;
+    }
+
+    .item-price {
+      font-weight: 700;
+      font-size: 0.7rem;
+      color: #2d5e3b;
+      background: #edf4e8;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid #c9a855;
+      background: white;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #4e3b28;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qty-btn:active {
+      background: #f3e5ca;
+      transform: scale(0.93);
+    }
+
+    .qty-input {
+      width: 36px;
+      height: 28px;
+      border: 1.5px solid #c9a855;
+      border-radius: 0.6rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      background: white;
+      color: #3e2e1c;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .item-total {
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: #1e4620;
+      background: #eaf4e5;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.8rem;
+      min-width: 50px;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+    }
+
+    .bottom-bar {
+      background: #f9f2e0;
+      padding: 0.8rem 1rem;
+      border-top: 2px solid #ddbc7a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .total-label {
+      font-family: 'Georgia', serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #5c471f;
+      text-transform: uppercase;
+    }
+
+    .total-value {
+      background: white;
+      padding: 0.4rem 1rem;
+      border-radius: 1.5rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #2b4f2b;
+      font-family: 'Courier New', monospace;
+      border: 1px solid #ddbc7a;
+    }
+
+    .reset-btn {
+      background: #e7d5b5;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 1.5rem;
+      font-weight: 600;
+      color: #4e3b28;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    #fileInput {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    
+    <div class="app-header">
+      <div class="church-name">OUR LADY OF ZEITOUN</div>
+      <div class="sub-title">Coptic Orthodox Church</div>
+    </div>
+
+    <div class="scan-section">
+      <button class="scan-btn" id="scanBtn" onclick="toggleScanner()">
+        📷 Scan QR Codes
+      </button>
+      <div class="scanner-view" id="scannerView">
+        <video id="scannerVideo" autoplay playsinline></video>
+      </div>
+      <div class="scan-status" id="scanStatus">Tap button to start scanning QR codes</div>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" id="tab-sandwiches" onclick="switchTab('sandwiches')">🥙 Sandwiches</button>
+      <button class="tab" id="tab-mains" onclick="switchTab('mains')">🍖 Main Dishes</button>
+    </div>
+
+    <div class="menu-content">
+      <div class="tab-panel active" id="sandwiches-panel"></div>
+      <div class="tab-panel" id="mains-panel"></div>
+    </div>
+
+    <div class="bottom-bar">
+      <span class="total-label">💰 TOTAL</span>
+      <span class="total-value" id="grandTotal">$0.00</span>
+      <button class="reset-btn" onclick="resetAll()">🔄 Clear</button>
+    </div>
+  </div>
+
+  <script>
+    const menuData = {
+      sandwiches: [
+        { code: 'S1', name: 'Beef Liver (Kebda)', arabic: 'ساندوتش كبدة', price: 7.00, qty: 0 },
+        { code: 'S2', name: 'Egyptian Sausage', arabic: 'ساندوتش سجق', price: 8.00, qty: 0 },
+        { code: 'S3', name: 'Kofta (ground beef)', arabic: 'ساندوتش كفتة', price: 10.00, qty: 0 },
+        { code: 'S4', name: 'Hawawshi (Ground Beef Pita)', arabic: 'حواشي', price: 10.00, qty: 0 },
+        { code: 'S5', name: 'Beef Shawerma', arabic: 'شاورمة لحمة', price: 10.00, qty: 0 },
+        { code: 'S6', name: 'Chicken Shawerma', arabic: 'شاورمة فراخ', price: 9.00, qty: 0 },
+        { code: 'S7', name: 'Feteer Savory Small', arabic: 'فطير حادق صغير', price: 15.00, qty: 0 },
+        { code: 'S8', name: 'Feteer Savory Large', arabic: 'فطير حادق كبير', price: 25.00, qty: 0 },
+        { code: 'S9', name: 'Feteer Sweet Small', arabic: 'فطير حلو صغير', price: 10.00, qty: 0 },
+        { code: 'S10', name: 'Feteer Sweet Large', arabic: 'فطير حلو كبير', price: 20.00, qty: 0 },
+        { code: 'S11', name: 'Plain Feteer Small', arabic: 'فطير سادة صغير', price: 5.00, qty: 0 }
+      ],
+      mains: [
+        { code: 'M1', name: '1 Piece Kofta (grilled)', arabic: 'واحدة كفتة', price: 3.00, qty: 0 },
+        { code: 'M2', name: 'Beef Kebab Skewer', arabic: 'كباب لحم', price: 8.00, qty: 0 },
+        { code: 'M3', name: 'Chicken Kebab Skewer', arabic: 'كباب فراخ', price: 7.00, qty: 0 },
+        { code: 'M4', name: '5 Stuffed Grape Leaves', arabic: 'محشي ورق عنب', price: 3.00, qty: 0 },
+        { code: 'M5', name: '2 Piece Mombar (Sausage)', arabic: 'ممبار', price: 3.00, qty: 0 },
+        { code: 'M6', name: 'Bechamel Pasta', arabic: 'مكرونة بشاميل', price: 10.00, qty: 0 },
+        { code: 'M7', name: 'Lamb Shank & Rice Meal', arabic: 'موزة خروف مع رز وورق عنب', price: 20.00, qty: 0 },
+        { code: 'M8', name: '1/2 Grilled Chicken & Rice', arabic: 'نص فرخة مشوية مع رز', price: 15.00, qty: 0 },
+        { code: 'M9', name: 'Rice with Nuts', arabic: 'رز بالخلطة', price: 3.00, qty: 0 },
+        { code: 'M10', name: 'Chicken Quesadilla', arabic: 'فراخ بالجبنة', price: 9.00, qty: 0 },
+        { code: 'M11', name: '4 Chicken Wings & Fries', arabic: 'أجنحة وبطاطس', price: 5.00, qty: 0 },
+        { code: 'M12', name: 'Duck Leg & Rice', arabic: 'بطة ورز', price: 10.00, qty: 0 }
+      ]
+    };
+
+    let scanning = false;
+    let stream = null;
+
+    function renderAll() {
+      renderCategory('sandwiches');
+      renderCategory('mains');
+    }
+
+    function renderCategory(category) {
+      const panel = document.getElementById(category + '-panel');
+      const items = menuData[category];
+      
+      panel.innerHTML = items.map((item, index) => `
+        <div class="menu-item" id="item-${item.code}">
+          <span class="item-code">${item.code}</span>
+          <div class="item-info">
+            <span class="item-name">${item.name}</span>
+            ${item.arabic ? `<span class="arabic-name">${item.arabic}</span>` : ''}
+          </div>
+          <span class="item-price">$${item.price.toFixed(2)}</span>
+          <div class="qty-controls">
+            <button class="qty-btn" onclick="changeQty('${category}', ${index}, -1)">−</button>
+            <input type="number" class="qty-input" value="${item.qty}" min="0" 
+              onchange="setQty('${category}', ${index}, this.value)" 
+              onfocus="this.select()">
+            <button class="qty-btn" onclick="changeQty('${category}', ${index}, 1)">+</button>
+          </div>
+          <span class="item-total">$${(item.price * item.qty).toFixed(2)}</span>
+        </div>
+      `).join('');
+    }
+
+    window.changeQty = function(category, index, delta) {
+      const item = menuData[category][index];
+      item.qty = Math.max(0, item.qty + delta);
+      renderAll();
+      updateGrandTotal();
+    };
+
+    window.setQty = function(category, index, value) {
+      const item = menuData[category][index];
+      item.qty = Math.max(0, parseInt(value) || 0);
+      renderAll();
+      updateGrandTotal();
+    };
+
+    function updateGrandTotal() {
+      let total = 0;
+      for (const category in menuData) {
+        menuData[category].forEach(item => {
+          total += item.price * item.qty;
+        });
+      }
+      document.getElementById('grandTotal').textContent = '$' + total.toFixed(2);
+    }
+
+    function addItemByCode(code) {
+      for (const category in menuData) {
+        const item = menuData[category].find(i => i.code === code);
+        if (item) {
+          item.qty += 1;
+          
+          // Highlight the item
+          setTimeout(() => {
+            const el = document.getElementById(`item-${code}`);
+            if (el) {
+              el.classList.add('just-scanned');
+              setTimeout(() => el.classList.remove('just-scanned'), 1500);
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+          
+          renderAll();
+          updateGrandTotal();
+          return item;
+        }
+      }
+      return null;
+    }
+
+    async function toggleScanner() {
+      if (scanning) {
+        stopScanner();
+        return;
+      }
+      
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        
+        const video = document.getElementById('scannerVideo');
+        video.srcObject = stream;
+        
+        document.getElementById('scannerView').classList.add('active');
+        document.getElementById('scanBtn').classList.add('active');
+        document.getElementById('scanBtn').textContent = '⏹ Stop Scanning';
+        document.getElementById('scanStatus').textContent = '📷 Point camera at QR codes...';
+        scanning = true;
+        
+        scanLoop();
+      } catch (err) {
+        document.getElementById('scanStatus').textContent = '⚠️ Camera access denied';
+        console.error(err);
+      }
+    }
+
+    function stopScanner() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      scanning = false;
+      document.getElementById('scannerView').classList.remove('active');
+      document.getElementById('scanBtn').classList.remove('active');
+      document.getElementById('scanBtn').textContent = '📷 Scan QR Codes';
+      document.getElementById('scanStatus').textContent = 'Tap button to start scanning QR codes';
+    }
+
+    function scanLoop() {
+      if (!scanning) return;
+      
+      const video = document.getElementById('scannerVideo');
+      const canvas = document.createElement('canvas');
+      
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height);
+        
+        if (code && code.data.startsWith('COPTC:')) {
+          const parts = code.data.split(':');
+          if (parts.length >= 3) {
+            const itemCode = parts[1];
+            const item = addItemByCode(itemCode);
+            if (item) {
+              document.getElementById('scanStatus').textContent = 
+                `✅ Added: ${item.name} (${itemCode})`;
+              
+              // Brief pause to prevent multiple scans
+              stopScanner();
+              setTimeout(() => {
+                if (!scanning) toggleScanner();
+              }, 1500);
+              return;
+            }
+          }
+        }
+      }
+      
+      requestAnimationFrame(scanLoop);
+    }
+
+    window.resetAll = function() {
+      if (confirm('Clear all quantities?')) {
+        for (const category in menuData) {
+          menuData[category].forEach(item => item.qty = 0);
+        }
+        renderAll();
+        updateGrandTotal();
+      }
+    };
+
+    window.switchTab = function(tab) {
+      document.getElementById('tab-sandwiches').classList.remove('active');
+      document.getElementById('tab-mains').classList.remove('active');
+      document.getElementById('sandwiches-panel').classList.remove('active');
+      document.getElementById('mains-panel').classList.remove('active');
+      
+      if (tab === 'sandwiches') {
+        document.getElementById('tab-sandwiches').classList.add('active');
+        document.getElementById('sandwiches-panel').classList.add('active');
+      } else {
+        document.getElementById('tab-mains').classList.add('active');
+        document.getElementById('mains-panel').classList.add('active');
+      }
+    };
+
+    renderAll();
+    updateGrandTotal();
+  </script>
+</body>
+</html>

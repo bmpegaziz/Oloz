@@ -64,8 +64,14 @@
       font-style: italic;
     }
 
+    .festival-banner {
+      font-size: 0.8rem;
+      color: #b48b3a;
+      font-weight: 600;
+    }
+
     .scan-section {
-      padding: 0.8rem;
+      padding: 1rem;
       text-align: center;
       background: #fdf8ed;
       border-bottom: 2px solid #e0c98a;
@@ -75,23 +81,25 @@
       background: #2d5e3b;
       color: white;
       border: none;
-      padding: 0.8rem 1.5rem;
+      padding: 1rem 2rem;
       border-radius: 2rem;
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      transition: all 0.2s;
     }
 
     .scan-btn:active {
       transform: scale(0.96);
+      background: #1e4620;
     }
 
-    .scan-btn.active {
-      background: #c0392b;
+    .scan-btn.scanning {
+      background: #c9a855;
       animation: pulse 1.5s infinite;
     }
 
@@ -100,27 +108,50 @@
       50% { opacity: 0.7; }
     }
 
-    .scanner-view {
-      display: none;
-      margin-top: 0.5rem;
-      position: relative;
-    }
-
-    .scanner-view.active {
-      display: block;
-    }
-
-    .scanner-view video {
+    .progress-bar {
       width: 100%;
+      height: 6px;
+      background: #e0c98a;
+      border-radius: 3px;
+      margin-top: 0.8rem;
+      display: none;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #2d5e3b;
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .status-text {
+      font-size: 0.8rem;
+      color: #6b5a44;
+      margin-top: 0.5rem;
+      min-height: 20px;
+      font-weight: 500;
+    }
+
+    .preview-image {
+      max-width: 100%;
+      max-height: 250px;
       border-radius: 1rem;
       border: 2px solid #d4a843;
+      margin-top: 0.8rem;
+      display: none;
     }
 
-    .scan-status {
-      font-size: 0.7rem;
-      color: #6b5a44;
-      margin-top: 0.3rem;
-      min-height: 20px;
+    .results-summary {
+      display: none;
+      background: #d4edda;
+      color: #155724;
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+      margin-top: 0.5rem;
+      font-weight: 600;
+      font-size: 0.85rem;
     }
 
     .tabs {
@@ -171,16 +202,12 @@
       border-bottom: 1px dotted rgba(160, 120, 60, 0.2);
       gap: 0.4rem;
       flex-wrap: wrap;
+      transition: background 0.3s;
     }
 
-    .menu-item.just-scanned {
+    .menu-item.scanned {
       background: #fffde7;
-      animation: highlight 1s;
-    }
-
-    @keyframes highlight {
-      0% { background: #d4edda; }
-      100% { background: #fffde7; }
+      border-left: 4px solid #2d5e3b;
     }
 
     .item-code {
@@ -263,6 +290,13 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
+    .qty-input.scanned-qty {
+      background: #fffde7;
+      border-color: #2d5e3b;
+      border-width: 2px;
+      font-weight: 800;
+    }
+
     .item-total {
       font-weight: 700;
       font-size: 0.75rem;
@@ -303,6 +337,12 @@
       color: #2b4f2b;
       font-family: 'Courier New', monospace;
       border: 1px solid #ddbc7a;
+      transition: all 0.3s;
+    }
+
+    .total-value.updated {
+      background: #d4edda;
+      transform: scale(1.05);
     }
 
     .reset-btn {
@@ -328,17 +368,20 @@
     <div class="app-header">
       <div class="church-name">OUR LADY OF ZEITOUN</div>
       <div class="sub-title">Coptic Orthodox Church</div>
+      <div class="festival-banner">✦ Annual Egyptian Coptic Festival ✦</div>
     </div>
 
     <div class="scan-section">
-      <button class="scan-btn" id="scanBtn" onclick="toggleScanner()">
-        📷 Scan QR Codes
+      <button class="scan-btn" id="scanBtn" onclick="document.getElementById('fileInput').click()">
+        📸 Photograph Order Slip
       </button>
-      <div class="scanner-view" id="scannerView">
-        <video id="scannerVideo" autoplay playsinline></video>
+      <input type="file" id="fileInput" accept="image/*" capture="environment">
+      <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
       </div>
-      <div class="scan-status" id="scanStatus">Tap button to start scanning QR codes</div>
-      <input type="file" id="fileInput" accept="image/*">
+      <div class="status-text" id="statusText">Take a photo of the printed order slip</div>
+      <div class="results-summary" id="resultsSummary"></div>
+      <img class="preview-image" id="previewImage" alt="Scanned order slip">
     </div>
 
     <div class="tabs">
@@ -361,36 +404,175 @@
   <script>
     const menuData = {
       sandwiches: [
-        { code: 'S1', name: 'Beef Liver (Kebda)', arabic: 'ساندوتش كبدة', price: 7.00, qty: 0 },
-        { code: 'S2', name: 'Egyptian Sausage', arabic: 'ساندوتش سجق', price: 8.00, qty: 0 },
-        { code: 'S3', name: 'Kofta (ground beef)', arabic: 'ساندوتش كفتة', price: 10.00, qty: 0 },
-        { code: 'S4', name: 'Hawawshi (Ground Beef Pita)', arabic: 'حواشي', price: 10.00, qty: 0 },
-        { code: 'S5', name: 'Beef Shawerma', arabic: 'شاورمة لحمة', price: 10.00, qty: 0 },
-        { code: 'S6', name: 'Chicken Shawerma', arabic: 'شاورمة فراخ', price: 9.00, qty: 0 },
-        { code: 'S7', name: 'Feteer Savory Small', arabic: 'فطير حادق صغير', price: 15.00, qty: 0 },
-        { code: 'S8', name: 'Feteer Savory Large', arabic: 'فطير حادق كبير', price: 25.00, qty: 0 },
-        { code: 'S9', name: 'Feteer Sweet Small', arabic: 'فطير حلو صغير', price: 10.00, qty: 0 },
-        { code: 'S10', name: 'Feteer Sweet Large', arabic: 'فطير حلو كبير', price: 20.00, qty: 0 },
-        { code: 'S11', name: 'Plain Feteer Small', arabic: 'فطير سادة صغير', price: 5.00, qty: 0 }
+        { code: 'S1', name: 'Beef Liver (Kebda)', arabic: 'ساندوتش كبدة', price: 7.00, qty: 0, scanned: false },
+        { code: 'S2', name: 'Egyptian Sausage', arabic: 'ساندوتش سجق', price: 8.00, qty: 0, scanned: false },
+        { code: 'S3', name: 'Kofta (ground beef)', arabic: 'ساندوتش كفتة', price: 10.00, qty: 0, scanned: false },
+        { code: 'S4', name: 'Hawawshi (Ground Beef Pita)', arabic: 'حواشي', price: 10.00, qty: 0, scanned: false },
+        { code: 'S5', name: 'Beef Shawerma', arabic: 'شاورمة لحمة', price: 10.00, qty: 0, scanned: false },
+        { code: 'S6', name: 'Chicken Shawerma', arabic: 'شاورمة فراخ', price: 9.00, qty: 0, scanned: false },
+        { code: 'S7', name: 'Feteer Savory Small', arabic: 'فطير حادق صغير', price: 15.00, qty: 0, scanned: false },
+        { code: 'S8', name: 'Feteer Savory Large', arabic: 'فطير حادق كبير', price: 25.00, qty: 0, scanned: false },
+        { code: 'S9', name: 'Feteer Sweet Small', arabic: 'فطير حلو صغير', price: 10.00, qty: 0, scanned: false },
+        { code: 'S10', name: 'Feteer Sweet Large', arabic: 'فطير حلو كبير', price: 20.00, qty: 0, scanned: false },
+        { code: 'S11', name: 'Plain Feteer Small', arabic: 'فطير سادة صغير', price: 5.00, qty: 0, scanned: false }
       ],
       mains: [
-        { code: 'M1', name: '1 Piece Kofta (grilled)', arabic: 'واحدة كفتة', price: 3.00, qty: 0 },
-        { code: 'M2', name: 'Beef Kebab Skewer', arabic: 'كباب لحم', price: 8.00, qty: 0 },
-        { code: 'M3', name: 'Chicken Kebab Skewer', arabic: 'كباب فراخ', price: 7.00, qty: 0 },
-        { code: 'M4', name: '5 Stuffed Grape Leaves', arabic: 'محشي ورق عنب', price: 3.00, qty: 0 },
-        { code: 'M5', name: '2 Piece Mombar (Sausage)', arabic: 'ممبار', price: 3.00, qty: 0 },
-        { code: 'M6', name: 'Bechamel Pasta', arabic: 'مكرونة بشاميل', price: 10.00, qty: 0 },
-        { code: 'M7', name: 'Lamb Shank & Rice Meal', arabic: 'موزة خروف مع رز وورق عنب', price: 20.00, qty: 0 },
-        { code: 'M8', name: '1/2 Grilled Chicken & Rice', arabic: 'نص فرخة مشوية مع رز', price: 15.00, qty: 0 },
-        { code: 'M9', name: 'Rice with Nuts', arabic: 'رز بالخلطة', price: 3.00, qty: 0 },
-        { code: 'M10', name: 'Chicken Quesadilla', arabic: 'فراخ بالجبنة', price: 9.00, qty: 0 },
-        { code: 'M11', name: '4 Chicken Wings & Fries', arabic: 'أجنحة وبطاطس', price: 5.00, qty: 0 },
-        { code: 'M12', name: 'Duck Leg & Rice', arabic: 'بطة ورز', price: 10.00, qty: 0 }
+        { code: 'M1', name: '1 Piece Kofta (grilled)', arabic: 'واحدة كفتة', price: 3.00, qty: 0, scanned: false },
+        { code: 'M2', name: 'Beef Kebab Skewer', arabic: 'كباب لحم', price: 8.00, qty: 0, scanned: false },
+        { code: 'M3', name: 'Chicken Kebab Skewer', arabic: 'كباب فراخ', price: 7.00, qty: 0, scanned: false },
+        { code: 'M4', name: '5 Stuffed Grape Leaves', arabic: 'محشي ورق عنب', price: 3.00, qty: 0, scanned: false },
+        { code: 'M5', name: '2 Piece Mombar (Sausage)', arabic: 'ممبار', price: 3.00, qty: 0, scanned: false },
+        { code: 'M6', name: 'Bechamel Pasta', arabic: 'مكرونة بشاميل', price: 10.00, qty: 0, scanned: false },
+        { code: 'M7', name: 'Lamb Shank & Rice Meal', arabic: 'موزة خروف مع رز وورق عنب', price: 20.00, qty: 0, scanned: false },
+        { code: 'M8', name: '1/2 Grilled Chicken & Rice', arabic: 'نص فرخة مشوية مع رز', price: 15.00, qty: 0, scanned: false },
+        { code: 'M9', name: 'Rice with Nuts', arabic: 'رز بالخلطة', price: 3.00, qty: 0, scanned: false },
+        { code: 'M10', name: 'Chicken Quesadilla', arabic: 'فراخ بالجبنة', price: 9.00, qty: 0, scanned: false },
+        { code: 'M11', name: '4 Chicken Wings & Fries', arabic: 'أجنحة وبطاطس', price: 5.00, qty: 0, scanned: false },
+        { code: 'M12', name: 'Duck Leg & Rice', arabic: 'بطة ورز', price: 10.00, qty: 0, scanned: false }
       ]
     };
 
-    let scanning = false;
-    let stream = null;
+    // Handle file selection
+    document.getElementById('fileInput').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        document.getElementById('previewImage').src = ev.target.result;
+        document.getElementById('previewImage').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+      
+      // Start scanning QR codes in the image
+      await scanImageForQRCodes(file);
+      this.value = '';
+    });
+
+    async function scanImageForQRCodes(imageFile) {
+      const scanBtn = document.getElementById('scanBtn');
+      const progressBar = document.getElementById('progressBar');
+      const progressFill = document.getElementById('progressFill');
+      const statusText = document.getElementById('statusText');
+      const resultsSummary = document.getElementById('resultsSummary');
+      
+      scanBtn.classList.add('scanning');
+      scanBtn.textContent = '🔍 Scanning QR Codes...';
+      progressBar.style.display = 'block';
+      resultsSummary.style.display = 'none';
+      
+      // Reset scanned flags
+      for (const category in menuData) {
+        menuData[category].forEach(item => item.scanned = false);
+      }
+      
+      try {
+        statusText.textContent = 'Loading image...';
+        progressFill.style.width = '20%';
+        
+        // Create image element
+        const img = new Image();
+        const imageUrl = URL.createObjectURL(imageFile);
+        
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = imageUrl;
+        });
+        
+        statusText.textContent = 'Scanning QR codes...';
+        progressFill.style.width = '50%';
+        
+        // Draw image to canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        statusText.textContent = 'Detecting QR codes...';
+        progressFill.style.width = '70%';
+        
+        // Try to find QR codes at multiple scales for better detection
+        const scales = [1, 0.75, 0.5];
+        let allCodes = [];
+        
+        for (const scale of scales) {
+          const scaledCanvas = document.createElement('canvas');
+          scaledCanvas.width = canvas.width * scale;
+          scaledCanvas.height = canvas.height * scale;
+          const scaledCtx = scaledCanvas.getContext('2d');
+          scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+          const scaledData = scaledCtx.getImageData(0, 0, scaledCanvas.width, scaledCanvas.height);
+          
+          const code = jsQR(scaledData.data, scaledCanvas.width, scaledCanvas.height);
+          if (code && code.data.startsWith('COPTC:')) {
+            // Check if this code was already found (avoid duplicates from different scales)
+            if (!allCodes.find(c => c.data === code.data)) {
+              allCodes.push(code);
+            }
+          }
+        }
+        
+        progressFill.style.width = '90%';
+        statusText.textContent = 'Processing results...';
+        
+        // Process found QR codes
+        let itemsFound = 0;
+        const foundCodes = new Set();
+        
+        for (const code of allCodes) {
+          const parts = code.data.split(':');
+          if (parts.length >= 3) {
+            const itemCode = parts[1];
+            
+            // Find and update the item
+            for (const category in menuData) {
+              const item = menuData[category].find(i => i.code === itemCode);
+              if (item && !foundCodes.has(itemCode)) {
+                item.qty += 1;
+                item.scanned = true;
+                foundCodes.add(itemCode);
+                itemsFound++;
+                break;
+              }
+            }
+          }
+        }
+        
+        progressFill.style.width = '100%';
+        
+        if (itemsFound > 0) {
+          statusText.textContent = `✅ Found ${itemsFound} items!`;
+          resultsSummary.textContent = `🎉 ${itemsFound} items detected from QR codes`;
+          resultsSummary.style.display = 'block';
+        } else {
+          statusText.textContent = '⚠️ No QR codes found. Try better lighting.';
+          resultsSummary.style.display = 'none';
+        }
+        
+        // Re-render and update total
+        renderAll();
+        updateGrandTotal();
+        
+        URL.revokeObjectURL(imageUrl);
+        
+      } catch (error) {
+        console.error('Scan error:', error);
+        statusText.textContent = '❌ Error scanning image. Try again.';
+      }
+      
+      // Reset UI
+      setTimeout(() => {
+        scanBtn.classList.remove('scanning');
+        scanBtn.textContent = '📸 Photograph Order Slip';
+        progressBar.style.display = 'none';
+        progressFill.style.width = '0%';
+      }, 2000);
+    }
 
     function renderAll() {
       renderCategory('sandwiches');
@@ -402,7 +584,7 @@
       const items = menuData[category];
       
       panel.innerHTML = items.map((item, index) => `
-        <div class="menu-item" id="item-${item.code}">
+        <div class="menu-item${item.scanned ? ' scanned' : ''}">
           <span class="item-code">${item.code}</span>
           <div class="item-info">
             <span class="item-name">${item.name}</span>
@@ -411,7 +593,7 @@
           <span class="item-price">$${item.price.toFixed(2)}</span>
           <div class="qty-controls">
             <button class="qty-btn" onclick="changeQty('${category}', ${index}, -1)">−</button>
-            <input type="number" class="qty-input" value="${item.qty}" min="0" 
+            <input type="number" class="qty-input${item.scanned ? ' scanned-qty' : ''}" value="${item.qty}" min="0" 
               onchange="setQty('${category}', ${index}, this.value)" 
               onfocus="this.select()">
             <button class="qty-btn" onclick="changeQty('${category}', ${index}, 1)">+</button>
@@ -424,6 +606,7 @@
     window.changeQty = function(category, index, delta) {
       const item = menuData[category][index];
       item.qty = Math.max(0, item.qty + delta);
+      item.scanned = item.qty > 0;
       renderAll();
       updateGrandTotal();
     };
@@ -431,6 +614,7 @@
     window.setQty = function(category, index, value) {
       const item = menuData[category][index];
       item.qty = Math.max(0, parseInt(value) || 0);
+      item.scanned = item.qty > 0;
       renderAll();
       updateGrandTotal();
     };
@@ -442,117 +626,25 @@
           total += item.price * item.qty;
         });
       }
-      document.getElementById('grandTotal').textContent = '$' + total.toFixed(2);
-    }
-
-    function addItemByCode(code) {
-      for (const category in menuData) {
-        const item = menuData[category].find(i => i.code === code);
-        if (item) {
-          item.qty += 1;
-          
-          // Highlight the item
-          setTimeout(() => {
-            const el = document.getElementById(`item-${code}`);
-            if (el) {
-              el.classList.add('just-scanned');
-              setTimeout(() => el.classList.remove('just-scanned'), 1500);
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }, 100);
-          
-          renderAll();
-          updateGrandTotal();
-          return item;
-        }
-      }
-      return null;
-    }
-
-    async function toggleScanner() {
-      if (scanning) {
-        stopScanner();
-        return;
-      }
-      
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
-        });
-        
-        const video = document.getElementById('scannerVideo');
-        video.srcObject = stream;
-        
-        document.getElementById('scannerView').classList.add('active');
-        document.getElementById('scanBtn').classList.add('active');
-        document.getElementById('scanBtn').textContent = '⏹ Stop Scanning';
-        document.getElementById('scanStatus').textContent = '📷 Point camera at QR codes...';
-        scanning = true;
-        
-        scanLoop();
-      } catch (err) {
-        document.getElementById('scanStatus').textContent = '⚠️ Camera access denied';
-        console.error(err);
-      }
-    }
-
-    function stopScanner() {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
-      }
-      scanning = false;
-      document.getElementById('scannerView').classList.remove('active');
-      document.getElementById('scanBtn').classList.remove('active');
-      document.getElementById('scanBtn').textContent = '📷 Scan QR Codes';
-      document.getElementById('scanStatus').textContent = 'Tap button to start scanning QR codes';
-    }
-
-    function scanLoop() {
-      if (!scanning) return;
-      
-      const video = document.getElementById('scannerVideo');
-      const canvas = document.createElement('canvas');
-      
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height);
-        
-        if (code && code.data.startsWith('COPTC:')) {
-          const parts = code.data.split(':');
-          if (parts.length >= 3) {
-            const itemCode = parts[1];
-            const item = addItemByCode(itemCode);
-            if (item) {
-              document.getElementById('scanStatus').textContent = 
-                `✅ Added: ${item.name} (${itemCode})`;
-              
-              // Brief pause to prevent multiple scans
-              stopScanner();
-              setTimeout(() => {
-                if (!scanning) toggleScanner();
-              }, 1500);
-              return;
-            }
-          }
-        }
-      }
-      
-      requestAnimationFrame(scanLoop);
+      const totalEl = document.getElementById('grandTotal');
+      totalEl.textContent = '$' + total.toFixed(2);
+      totalEl.classList.add('updated');
+      setTimeout(() => totalEl.classList.remove('updated'), 500);
     }
 
     window.resetAll = function() {
       if (confirm('Clear all quantities?')) {
         for (const category in menuData) {
-          menuData[category].forEach(item => item.qty = 0);
+          menuData[category].forEach(item => {
+            item.qty = 0;
+            item.scanned = false;
+          });
         }
         renderAll();
         updateGrandTotal();
+        document.getElementById('previewImage').style.display = 'none';
+        document.getElementById('resultsSummary').style.display = 'none';
+        document.getElementById('statusText').textContent = 'Take a photo of the printed order slip';
       }
     };
 
@@ -573,6 +665,7 @@
 
     renderAll();
     updateGrandTotal();
+    console.log('✅ QR Code Order Slip Scanner ready!');
   </script>
 </body>
 </html>
