@@ -563,4 +563,16 @@
       document.getElementById('mains-panel').classList.remove('active');
       
       if (tab === 'sandwiches') {
-        document.getElementById('tab-sandwiches').classList.add('
+        document.getElementById('tab-sandwiches').classList.add('active');
+        document.getElementById('sandwiches-panel').classList.add('active');
+      } else {
+        document.getElementById('tab-mains').classList.add('active');
+        document.getElementById('mains-panel').classList.add('active');
+      }
+    };
+
+    renderAll();
+    updateGrandTotal();
+  </script>
+</body>
+</html>
