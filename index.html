@@ -6,39 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Coptic Festival">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#f7f3e8">
   <title>Coptic Festival Order Calculator</title>
   
-  <!-- Manifest for PWA -->
-  <script>
-    // Inline manifest as data URI to avoid needing a separate file
-    const manifest = {
-      name: "Coptic Festival Order",
-      short_name: "CopticFest",
-      description: "Order calculator for Our Lady of Zeitoun Coptic Festival",
-      start_url: location.href,
-      display: "standalone",
-      background_color: "#f7f3e8",
-      theme_color: "#4e3b28",
-      orientation: "portrait",
-      icons: [
-        {
-          src: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="32" fill="#4e3b28"/><text x="96" y="80" text-anchor="middle" fill="#d4a843" font-size="40" font-family="serif">✝</text><text x="96" y="130" text-anchor="middle" fill="#f7f3e8" font-size="24" font-family="serif">CF</text></svg>'),
-          sizes: "192x192",
-          type: "image/svg+xml"
-        }
-      ]
-    };
-    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-    const manifestURL = URL.createObjectURL(blob);
-    document.querySelector('link[rel="manifest"]')?.remove();
-    const link = document.createElement('link');
-    link.rel = 'manifest';
-    link.href = manifestURL;
-    document.head.appendChild(link);
-  </script>
-
   <style>
     * {
       margin: 0;
@@ -49,11 +19,6 @@
       user-select: none;
     }
 
-    input {
-      -webkit-user-select: text;
-      user-select: text;
-    }
-
     body {
       background: #f7f3e8;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Georgia', serif;
@@ -61,7 +26,6 @@
       justify-content: center;
       align-items: flex-start;
       min-height: 100vh;
-      min-height: 100dvh;
       padding: 0.5rem;
       margin: 0;
     }
@@ -72,22 +36,16 @@
       background: #fffef9;
       border-radius: 2rem;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      min-height: 100dvh;
     }
 
-    /* Header */
     .app-header {
       background: linear-gradient(180deg, #fffdf7 0%, #fef9ed 100%);
       padding: 1.2rem 1rem 1rem;
       text-align: center;
       border-bottom: 2px solid #d4a843;
-      position: sticky;
-      top: 0;
-      z-index: 10;
     }
 
     .church-name {
@@ -112,7 +70,6 @@
       margin-top: 0.2rem;
     }
 
-    /* Camera Section */
     .camera-section {
       padding: 0.8rem 1rem;
       text-align: center;
@@ -174,7 +131,6 @@
       justify-content: center;
     }
 
-    /* Tabs */
     .tabs {
       display: flex;
       border-bottom: 2px solid #d4a843;
@@ -201,7 +157,6 @@
       background: #fffef9;
     }
 
-    /* Menu Items */
     .menu-content {
       flex: 1;
       overflow-y: auto;
@@ -236,6 +191,7 @@
       font-weight: 600;
       font-size: 0.85rem;
       color: #3f3322;
+      display: block;
     }
 
     .arabic-name {
@@ -297,12 +253,6 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
-    .qty-input:focus {
-      outline: none;
-      border-color: #b38b40;
-      box-shadow: 0 0 0 3px rgba(180, 140, 60, 0.15);
-    }
-
     .item-total {
       font-weight: 700;
       font-size: 0.85rem;
@@ -315,7 +265,6 @@
       font-family: 'Courier New', monospace;
     }
 
-    /* Bottom Bar */
     .bottom-bar {
       background: #f9f2e0;
       padding: 1rem 1.2rem;
@@ -325,8 +274,6 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 0.8rem;
-      position: sticky;
-      bottom: 0;
     }
 
     .total-label {
@@ -361,114 +308,27 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
-    .reset-btn:active {
-      background: #dbbc7c;
-    }
-
-    /* Install Banner */
-    .install-banner {
-      display: none;
-      background: #4e3b28;
-      color: #f7f3e8;
-      padding: 0.8rem 1rem;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.85rem;
-    }
-
-    /* Camera Modal */
-    .camera-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      z-index: 1000;
-      flex-direction: column;
-    }
-
-    .camera-modal.active {
-      display: flex;
-    }
-
-    .camera-view {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .camera-view video {
-      max-width: 100%;
-      max-height: 100%;
-    }
-
-    .camera-controls {
-      padding: 1rem;
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      background: rgba(0,0,0,0.8);
-    }
-
-    .capture-btn {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: white;
-      border: 4px solid #d4a843;
-      cursor: pointer;
-    }
-
-    .capture-btn:active {
-      transform: scale(0.9);
-    }
-
-    .close-camera {
-      background: transparent;
-      color: white;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: 0.5rem 1rem;
-    }
-
-    /* File input hidden */
     #fileInput {
       display: none;
-    }
-
-    @media print {
-      body { background: white; }
-      .app-container { box-shadow: none; }
-      .camera-btn, .qty-btn, .reset-btn, .tabs { display: none; }
     }
   </style>
 </head>
 <body>
   <div class="app-container">
     
-    <!-- Install Banner -->
-    <div class="install-banner" id="installBanner" onclick="installApp()">
-      📲 Tap to install this app on your home screen
-    </div>
-
     <!-- Header -->
     <div class="app-header">
-      <div class="church-name">Our Lady of Zeitoun</div>
+      <div class="church-name">OUR LADY OF ZEITOUN</div>
       <div class="sub-title">Coptic Orthodox Church</div>
       <div class="festival-banner">✦ Annual Egyptian Coptic Festival ✦</div>
     </div>
 
     <!-- Camera Section -->
     <div class="camera-section">
-      <button class="camera-btn" onclick="openCameraOptions()">
+      <button class="camera-btn" onclick="document.getElementById('fileInput').click()">
         📸 Photograph Order Slip
       </button>
-      <input type="file" id="fileInput" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
+      <input type="file" id="fileInput" accept="image/*" capture="environment">
       <div class="camera-preview" id="cameraPreview">
         <img id="previewImage" src="" alt="Order slip photo">
         <button class="remove-photo" onclick="removePhoto()">✕</button>
@@ -477,8 +337,8 @@
 
     <!-- Tabs -->
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('sandwiches')">🥙 Sandwiches</button>
-      <button class="tab" onclick="switchTab('mains')">🍖 Main Dishes</button>
+      <button class="tab active" id="tab-sandwiches" onclick="switchTab('sandwiches')">🥙 Sandwiches</button>
+      <button class="tab" id="tab-mains" onclick="switchTab('mains')">🍖 Main Dishes</button>
     </div>
 
     <!-- Menu Content -->
@@ -489,139 +349,61 @@
 
     <!-- Bottom Bar -->
     <div class="bottom-bar">
-      <span class="total-label">💰 Total</span>
+      <span class="total-label">💰 TOTAL</span>
       <span class="total-value" id="grandTotal">$0.00</span>
       <button class="reset-btn" onclick="resetAll()">🔄 Clear</button>
     </div>
-
-    <!-- Camera Modal -->
-    <div class="camera-modal" id="cameraModal">
-      <div style="display: flex; justify-content: flex-end; padding: 0.5rem;">
-        <button class="close-camera" onclick="closeCamera()">✕ Close</button>
-      </div>
-      <div class="camera-view">
-        <video id="cameraVideo" autoplay playsinline></video>
-      </div>
-      <div class="camera-controls">
-        <button class="capture-btn" onclick="capturePhoto()"></button>
-      </div>
-    </div>
-
   </div>
 
-  <!-- Service Worker Registration -->
   <script>
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swCode = `
-          const CACHE_NAME = 'coptic-festival-v2';
-          const urlsToCache = ['/'];
-          
-          self.addEventListener('install', event => {
-            event.waitUntil(
-              caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-            );
-            self.skipWaiting();
-          });
-          
-          self.addEventListener('fetch', event => {
-            event.respondWith(
-              caches.match(event.request).then(response => response || fetch(event.request))
-            );
-          });
-        `;
-        
-        const swBlob = new Blob([swCode], {type: 'application/javascript'});
-        const swURL = URL.createObjectURL(swBlob);
-        
-        navigator.serviceWorker.register(swURL)
-          .then(reg => console.log('SW registered'))
-          .catch(err => console.log('SW registration failed:', err));
-      });
-    }
-  </script>
-
-  <script>
-    // Menu Data
+    // Menu Data - All items with prices
     const menuData = {
       sandwiches: [
-        { name: "Beef Liver (Kebda)", arabic: "ساندوتش كبدة", price: 7.00, qty: 0 },
-        { name: "Egyptian Sausage", arabic: "ساندوتش سجق", price: 8.00, qty: 0 },
-        { name: "Kofta (ground beef)", arabic: "ساندوتش كفتة", price: 10.00, qty: 0 },
-        { name: "Hawawshi (Ground Beef Pita)", arabic: "حواشي", price: 10.00, qty: 0 },
-        { name: "Beef Shawerma", arabic: "شاورمة لحمة", price: 10.00, qty: 0 },
-        { name: "Chicken Shawerma", arabic: "شاورمة فراخ", price: 9.00, qty: 0 },
-        { name: "Feteer Savory Small", arabic: "فطير حادق صغير", price: 15.00, qty: 0 },
-        { name: "Feteer Savory Large", arabic: "فطير حادق كبير", price: 25.00, qty: 0 },
-        { name: "Feteer Sweet Small", arabic: "فطير حلو صغير", price: 10.00, qty: 0 },
-        { name: "Feteer Sweet Large", arabic: "فطير حلو كبير", price: 20.00, qty: 0 },
-        { name: "Plain Feteer Small", arabic: "فطير سادة صغير", price: 5.00, qty: 0 },
-        { name: "Crepe / Waffles (sauce only)", arabic: "", price: 5.00, qty: 0 },
-        { name: "Crepe / Waffles (toppings)", arabic: "", price: 7.00, qty: 0 }
+        { name: 'Beef Liver (Kebda)', arabic: 'ساندوتش كبدة', price: 7.00, qty: 0 },
+        { name: 'Egyptian Sausage', arabic: 'ساندوتش سجق', price: 8.00, qty: 0 },
+        { name: 'Kofta (ground beef)', arabic: 'ساندوتش كفتة', price: 10.00, qty: 0 },
+        { name: 'Hawawshi (Ground Beef Pita)', arabic: 'حواشي', price: 10.00, qty: 0 },
+        { name: 'Beef Shawerma', arabic: 'شاورمة لحمة', price: 10.00, qty: 0 },
+        { name: 'Chicken Shawerma', arabic: 'شاورمة فراخ', price: 9.00, qty: 0 },
+        { name: 'Feteer Savory Small', arabic: 'فطير حادق صغير', price: 15.00, qty: 0 },
+        { name: 'Feteer Savory Large', arabic: 'فطير حادق كبير', price: 25.00, qty: 0 },
+        { name: 'Feteer Sweet Small', arabic: 'فطير حلو صغير', price: 10.00, qty: 0 },
+        { name: 'Feteer Sweet Large', arabic: 'فطير حلو كبير', price: 20.00, qty: 0 },
+        { name: 'Plain Feteer Small', arabic: 'فطير سادة صغير', price: 5.00, qty: 0 },
+        { name: 'Crepe / Waffles (sauce only)', arabic: '', price: 5.00, qty: 0 },
+        { name: 'Crepe / Waffles (toppings)', arabic: '', price: 7.00, qty: 0 }
       ],
       mains: [
-        { name: "1 Piece Kofta (grilled)", arabic: "واحدة كفتة", price: 3.00, qty: 0 },
-        { name: "Beef Kebab Skewer", arabic: "كباب لحم", price: 8.00, qty: 0 },
-        { name: "Chicken Kebab Skewer", arabic: "كباب فراخ", price: 7.00, qty: 0 },
-        { name: "5 Stuffed Grape Leaves", arabic: "محشي ورق عنب", price: 3.00, qty: 0 },
-        { name: "2 Piece Mombar (Sausage)", arabic: "ممبار", price: 3.00, qty: 0 },
-        { name: "Bechamel Pasta", arabic: "مكرونة بشاميل", price: 10.00, qty: 0 },
-        { name: "2 Cheese Goulash", arabic: "جلاش جبنة", price: 5.00, qty: 0 },
-        { name: "1 Beef Goulash", arabic: "جلاش لحمة", price: 3.00, qty: 0 },
-        { name: "Lamb Shank & Rice Meal", arabic: "موزة خروف مع رز وورق عنب", price: 20.00, qty: 0 },
-        { name: "1/2 Grilled Chicken & Rice", arabic: "نص فرخة مشوية مع رز", price: 15.00, qty: 0 },
-        { name: "Beef Hooves & Rice", arabic: "كوارع مع رز وورق عنب", price: 15.00, qty: 0 },
-        { name: "Rice with Nuts", arabic: "رز بالخلطة", price: 3.00, qty: 0 },
-        { name: "Chicken Quesadilla", arabic: "فراخ بالجبنة", price: 9.00, qty: 0 },
-        { name: "4 Chicken Wings & Fries", arabic: "أجنحة وبطاطس", price: 5.00, qty: 0 },
-        { name: "Duck Leg & Rice", arabic: "بطة ورز", price: 10.00, qty: 0 }
+        { name: '1 Piece Kofta (grilled)', arabic: 'واحدة كفتة', price: 3.00, qty: 0 },
+        { name: 'Beef Kebab Skewer', arabic: 'كباب لحم', price: 8.00, qty: 0 },
+        { name: 'Chicken Kebab Skewer', arabic: 'كباب فراخ', price: 7.00, qty: 0 },
+        { name: '5 Stuffed Grape Leaves', arabic: 'محشي ورق عنب', price: 3.00, qty: 0 },
+        { name: '2 Piece Mombar (Sausage)', arabic: 'ممبار', price: 3.00, qty: 0 },
+        { name: 'Bechamel Pasta', arabic: 'مكرونة بشاميل', price: 10.00, qty: 0 },
+        { name: '2 Cheese Goulash', arabic: 'جلاش جبنة', price: 5.00, qty: 0 },
+        { name: '1 Beef Goulash', arabic: 'جلاش لحمة', price: 3.00, qty: 0 },
+        { name: 'Lamb Shank & Rice Meal', arabic: 'موزة خروف مع رز وورق عنب', price: 20.00, qty: 0 },
+        { name: '1/2 Grilled Chicken & Rice', arabic: 'نص فرخة مشوية مع رز', price: 15.00, qty: 0 },
+        { name: 'Beef Hooves & Rice', arabic: 'كوارع مع رز وورق عنب', price: 15.00, qty: 0 },
+        { name: 'Rice with Nuts', arabic: 'رز بالخلطة', price: 3.00, qty: 0 },
+        { name: 'Chicken Quesadilla', arabic: 'فراخ بالجبنة', price: 9.00, qty: 0 },
+        { name: '4 Chicken Wings & Fries', arabic: 'أجنحة وبطاطس', price: 5.00, qty: 0 },
+        { name: 'Duck Leg & Rice', arabic: 'بطة ورز', price: 10.00, qty: 0 }
       ]
     };
 
-    let deferredPrompt;
-    let currentTab = 'sandwiches';
-    let cameraStream = null;
-
-    // Initialize
-    function init() {
-      renderMenu('sandwiches');
-      renderMenu('mains');
-      updateGrandTotal();
-      
-      // Listen for install prompt
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        document.getElementById('installBanner').style.display = 'block';
-      });
-      
-      // Check if already installed
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        document.getElementById('installBanner').style.display = 'none';
-      }
+    // Render all menu items
+    function renderAll() {
+      renderCategory('sandwiches');
+      renderCategory('mains');
     }
 
-    // Install app
-    function installApp() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            document.getElementById('installBanner').style.display = 'none';
-          }
-          deferredPrompt = null;
-        });
-      }
-    }
-
-    // Render menu items
-    function renderMenu(category) {
-      const panel = document.getElementById(`${category}-panel`);
+    function renderCategory(category) {
+      const panel = document.getElementById(category + '-panel');
       const items = menuData[category];
       
       panel.innerHTML = items.map((item, index) => `
-        <div class="menu-item" data-category="${category}" data-index="${index}">
+        <div class="menu-item">
           <div class="item-info">
             <span class="item-name">${item.name}</span>
             ${item.arabic ? `<span class="arabic-name">${item.arabic}</span>` : ''}
@@ -634,209 +416,106 @@
               onfocus="this.select()">
             <button class="qty-btn" onclick="changeQty('${category}', ${index}, 1)">+</button>
           </div>
-          <span class="item-total">$${(item.price * item.qty).toFixed(2)}</span>
+          <span class="item-total" id="total-${category}-${index}">$${(item.price * item.qty).toFixed(2)}</span>
         </div>
       `).join('');
     }
 
-    // Update item display
-    function updateItemDisplay(category, index) {
-      const panel = document.getElementById(`${category}-panel`);
-      const itemElement = panel.querySelectorAll('.menu-item')[index];
-      if (!itemElement) return;
-      
-      const item = menuData[category][index];
-      const qtyInput = itemElement.querySelector('.qty-input');
-      const totalSpan = itemElement.querySelector('.item-total');
-      
-      qtyInput.value = item.qty;
-      totalSpan.textContent = `$${(item.price * item.qty).toFixed(2)}`;
-    }
-
-    // Change quantity
-    function changeQty(category, index, delta) {
+    // Change quantity by delta
+    window.changeQty = function(category, index, delta) {
       const item = menuData[category][index];
       item.qty = Math.max(0, item.qty + delta);
-      updateItemDisplay(category, index);
+      updateDisplay(category, index);
       updateGrandTotal();
-    }
+    };
 
     // Set quantity from input
-    function setQty(category, index, value) {
+    window.setQty = function(category, index, value) {
       const item = menuData[category][index];
       let qty = parseInt(value) || 0;
       item.qty = Math.max(0, qty);
-      updateItemDisplay(category, index);
+      updateDisplay(category, index);
       updateGrandTotal();
+    };
+
+    // Update single item display
+    function updateDisplay(category, index) {
+      const item = menuData[category][index];
+      const panel = document.getElementById(category + '-panel');
+      const itemElements = panel.querySelectorAll('.menu-item');
+      const element = itemElements[index];
+      
+      if (element) {
+        const qtyInput = element.querySelector('.qty-input');
+        const totalSpan = element.querySelector('.item-total');
+        if (qtyInput) qtyInput.value = item.qty;
+        if (totalSpan) totalSpan.textContent = '$' + (item.price * item.qty).toFixed(2);
+      }
     }
 
     // Update grand total
     function updateGrandTotal() {
       let total = 0;
-      Object.values(menuData).forEach(items => {
-        items.forEach(item => {
+      for (const category in menuData) {
+        menuData[category].forEach(item => {
           total += item.price * item.qty;
         });
-      });
-      document.getElementById('grandTotal').textContent = `$${total.toFixed(2)}`;
+      }
+      document.getElementById('grandTotal').textContent = '$' + total.toFixed(2);
     }
 
     // Reset all
-    function resetAll() {
+    window.resetAll = function() {
       if (confirm('Clear all quantities?')) {
-        Object.values(menuData).forEach(items => {
-          items.forEach(item => item.qty = 0);
-        });
-        renderMenu('sandwiches');
-        renderMenu('mains');
+        for (const category in menuData) {
+          menuData[category].forEach(item => {
+            item.qty = 0;
+          });
+        }
+        renderAll();
         updateGrandTotal();
       }
-    }
+    };
 
-    // Switch tab
-    function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    // Switch tabs
+    window.switchTab = function(tab) {
+      document.getElementById('tab-sandwiches').classList.remove('active');
+      document.getElementById('tab-mains').classList.remove('active');
+      document.getElementById('sandwiches-panel').classList.remove('active');
+      document.getElementById('mains-panel').classList.remove('active');
       
       if (tab === 'sandwiches') {
-        document.querySelectorAll('.tab')[0].classList.add('active');
+        document.getElementById('tab-sandwiches').classList.add('active');
         document.getElementById('sandwiches-panel').classList.add('active');
       } else {
-        document.querySelectorAll('.tab')[1].classList.add('active');
+        document.getElementById('tab-mains').classList.add('active');
         document.getElementById('mains-panel').classList.add('active');
       }
-    }
+    };
 
-    // Camera functions
-    function openCameraOptions() {
-      // On mobile, use file input with capture attribute for better UX
-      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        document.getElementById('fileInput').click();
-      } else {
-        openCameraModal();
-      }
-    }
-
-    function openCameraModal() {
-      const modal = document.getElementById('cameraModal');
-      modal.classList.add('active');
-      
-      navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      }).then(stream => {
-        cameraStream = stream;
-        document.getElementById('cameraVideo').srcObject = stream;
-      }).catch(err => {
-        alert('Cannot access camera. Please use the file upload option.');
-        closeCamera();
-        document.getElementById('fileInput').click();
-      });
-    }
-
-    function closeCamera() {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-      }
-      document.getElementById('cameraModal').classList.remove('active');
-    }
-
-    function capturePhoto() {
-      const video = document.getElementById('cameraVideo');
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      
-      const imageData = canvas.toDataURL('image/jpeg');
-      displayPhoto(imageData);
-      closeCamera();
-    }
-
-    function handleFileSelect(event) {
-      const file = event.target.files[0];
+    // File upload
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-          displayPhoto(e.target.result);
+        reader.onload = function(ev) {
+          document.getElementById('previewImage').src = ev.target.result;
+          document.getElementById('cameraPreview').style.display = 'block';
         };
         reader.readAsDataURL(file);
       }
-      event.target.value = '';
-    }
+      this.value = '';
+    });
 
-    function displayPhoto(imageData) {
-      const preview = document.getElementById('cameraPreview');
-      const img = document.getElementById('previewImage');
-      img.src = imageData;
-      preview.style.display = 'block';
-      
-      // Save to localStorage for persistence
-      try {
-        localStorage.setItem('orderSlipPhoto', imageData);
-      } catch(e) {
-        // Image too large for localStorage
-      }
-    }
-
-    function removePhoto() {
+    window.removePhoto = function() {
       document.getElementById('cameraPreview').style.display = 'none';
       document.getElementById('previewImage').src = '';
-      localStorage.removeItem('orderSlipPhoto');
-    }
-
-    // Load saved photo on startup
-    function loadSavedPhoto() {
-      const saved = localStorage.getItem('orderSlipPhoto');
-      if (saved) {
-        displayPhoto(saved);
-      }
-    }
-
-    // Load saved quantities
-    function loadSavedData() {
-      const saved = localStorage.getItem('menuData');
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          if (data.sandwiches) menuData.sandwiches = data.sandwiches;
-          if (data.mains) menuData.mains = data.mains;
-        } catch(e) {}
-      }
-    }
-
-    // Save data on changes
-    function saveData() {
-      try {
-        localStorage.setItem('menuData', JSON.stringify(menuData));
-      } catch(e) {}
-    }
-
-    // Override update functions to save
-    const originalChangeQty = changeQty;
-    const originalSetQty = setQty;
-    const originalResetAll = resetAll;
-
-    changeQty = function(category, index, delta) {
-      originalChangeQty(category, index, delta);
-      saveData();
     };
 
-    setQty = function(category, index, value) {
-      originalSetQty(category, index, value);
-      saveData();
-    };
-
-    resetAll = function() {
-      originalResetAll();
-      saveData();
-    };
-
-    // Initialize app
-    loadSavedData();
-    init();
-    loadSavedPhoto();
+    // Initialize
+    renderAll();
+    updateGrandTotal();
+    console.log('✅ Coptic Festival Calculator ready!');
   </script>
 </body>
 </html>
