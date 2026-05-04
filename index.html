@@ -7,10 +7,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Coptic Scanner">
   <meta name="theme-color" content="#f7f3e8">
-  <title>Coptic Festival OCR Scanner</title>
+  <title>Coptic Festival QR Scanner</title>
   
-  <!-- Tesseract.js OCR Library -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   
   <style>
     * {
@@ -65,15 +64,8 @@
       font-style: italic;
     }
 
-    .festival-banner {
-      font-size: 0.8rem;
-      color: #b48b3a;
-      font-weight: 600;
-    }
-
-    /* Scan Section */
     .scan-section {
-      padding: 1rem;
+      padding: 0.8rem;
       text-align: center;
       background: #fdf8ed;
       border-bottom: 2px solid #e0c98a;
@@ -83,25 +75,23 @@
       background: #2d5e3b;
       color: white;
       border: none;
-      padding: 1rem 2rem;
+      padding: 0.8rem 1.5rem;
       border-radius: 2rem;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      transition: all 0.2s;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     .scan-btn:active {
       transform: scale(0.96);
-      background: #1e4620;
     }
 
-    .scan-btn.scanning {
-      background: #c9a855;
+    .scan-btn.active {
+      background: #c0392b;
       animation: pulse 1.5s infinite;
     }
 
@@ -110,41 +100,29 @@
       50% { opacity: 0.7; }
     }
 
-    .progress-bar {
-      width: 100%;
-      height: 6px;
-      background: #e0c98a;
-      border-radius: 3px;
-      margin-top: 0.8rem;
+    .scanner-view {
       display: none;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: #2d5e3b;
-      border-radius: 3px;
-      transition: width 0.3s;
-      width: 0%;
-    }
-
-    .status-text {
-      font-size: 0.75rem;
-      color: #6b5a44;
       margin-top: 0.5rem;
-      display: none;
+      position: relative;
     }
 
-    .preview-image {
-      max-width: 100%;
-      max-height: 200px;
+    .scanner-view.active {
+      display: block;
+    }
+
+    .scanner-view video {
+      width: 100%;
       border-radius: 1rem;
       border: 2px solid #d4a843;
-      margin-top: 0.8rem;
-      display: none;
     }
 
-    /* Tabs */
+    .scan-status {
+      font-size: 0.7rem;
+      color: #6b5a44;
+      margin-top: 0.3rem;
+      min-height: 20px;
+    }
+
     .tabs {
       display: flex;
       border-bottom: 2px solid #d4a843;
@@ -193,6 +171,16 @@
       border-bottom: 1px dotted rgba(160, 120, 60, 0.2);
       gap: 0.4rem;
       flex-wrap: wrap;
+    }
+
+    .menu-item.just-scanned {
+      background: #fffde7;
+      animation: highlight 1s;
+    }
+
+    @keyframes highlight {
+      0% { background: #d4edda; }
+      100% { background: #fffde7; }
     }
 
     .item-code {
@@ -275,12 +263,6 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
-    .qty-input.scanned {
-      background: #fffde7;
-      border-color: #2d5e3b;
-      border-width: 2px;
-    }
-
     .item-total {
       font-weight: 700;
       font-size: 0.75rem;
@@ -338,54 +320,37 @@
     #fileInput {
       display: none;
     }
-
-    .scanned-count {
-      background: #2d5e3b;
-      color: white;
-      font-size: 0.7rem;
-      padding: 0.2rem 0.6rem;
-      border-radius: 1rem;
-      display: none;
-    }
   </style>
 </head>
 <body>
   <div class="app-container">
     
-    <!-- Header -->
     <div class="app-header">
       <div class="church-name">OUR LADY OF ZEITOUN</div>
       <div class="sub-title">Coptic Orthodox Church</div>
-      <div class="festival-banner">✦ Annual Egyptian Coptic Festival ✦</div>
     </div>
 
-    <!-- Scan Section -->
     <div class="scan-section">
-      <button class="scan-btn" id="scanBtn" onclick="startScan()">
-        📸 Scan Order Slip
+      <button class="scan-btn" id="scanBtn" onclick="toggleScanner()">
+        📷 Scan QR Codes
       </button>
-      <input type="file" id="fileInput" accept="image/*" capture="environment">
-      <div class="progress-bar" id="progressBar">
-        <div class="progress-fill" id="progressFill"></div>
+      <div class="scanner-view" id="scannerView">
+        <video id="scannerVideo" autoplay playsinline></video>
       </div>
-      <div class="status-text" id="statusText"></div>
-      <span class="scanned-count" id="scannedCount">0 items found</span>
-      <img class="preview-image" id="previewImage" alt="Scanned slip">
+      <div class="scan-status" id="scanStatus">Tap button to start scanning QR codes</div>
+      <input type="file" id="fileInput" accept="image/*">
     </div>
 
-    <!-- Tabs -->
     <div class="tabs">
       <button class="tab active" id="tab-sandwiches" onclick="switchTab('sandwiches')">🥙 Sandwiches</button>
       <button class="tab" id="tab-mains" onclick="switchTab('mains')">🍖 Main Dishes</button>
     </div>
 
-    <!-- Menu Content -->
     <div class="menu-content">
       <div class="tab-panel active" id="sandwiches-panel"></div>
       <div class="tab-panel" id="mains-panel"></div>
     </div>
 
-    <!-- Bottom Bar -->
     <div class="bottom-bar">
       <span class="total-label">💰 TOTAL</span>
       <span class="total-value" id="grandTotal">$0.00</span>
@@ -394,22 +359,19 @@
   </div>
 
   <script>
-    // Menu Data with codes
     const menuData = {
       sandwiches: [
-        { code: 'B1', name: 'Beef Liver (Kebda)', arabic: 'ساندوتش كبدة', price: 7.00, qty: 0 },
-        { code: 'B2', name: 'Egyptian Sausage', arabic: 'ساندوتش سجق', price: 8.00, qty: 0 },
-        { code: 'B3', name: 'Kofta (ground beef)', arabic: 'ساندوتش كفتة', price: 10.00, qty: 0 },
-        { code: 'B4', name: 'Hawawshi (Ground Beef Pita)', arabic: 'حواشي', price: 10.00, qty: 0 },
-        { code: 'B5', name: 'Beef Shawerma', arabic: 'شاورمة لحمة', price: 10.00, qty: 0 },
-        { code: 'B6', name: 'Chicken Shawerma', arabic: 'شاورمة فراخ', price: 9.00, qty: 0 },
-        { code: 'B7', name: 'Feteer Savory Small', arabic: 'فطير حادق صغير', price: 15.00, qty: 0 },
-        { code: 'B8', name: 'Feteer Savory Large', arabic: 'فطير حادق كبير', price: 25.00, qty: 0 },
-        { code: 'B9', name: 'Feteer Sweet Small', arabic: 'فطير حلو صغير', price: 10.00, qty: 0 },
-        { code: 'B10', name: 'Feteer Sweet Large', arabic: 'فطير حلو كبير', price: 20.00, qty: 0 },
-        { code: 'B11', name: 'Plain Feteer Small', arabic: 'فطير سادة صغير', price: 5.00, qty: 0 },
-        { code: 'B12', name: 'Crepe/Waffles (sauce)', arabic: '', price: 5.00, qty: 0 },
-        { code: 'B13', name: 'Crepe/Waffles (toppings)', arabic: '', price: 7.00, qty: 0 }
+        { code: 'S1', name: 'Beef Liver (Kebda)', arabic: 'ساندوتش كبدة', price: 7.00, qty: 0 },
+        { code: 'S2', name: 'Egyptian Sausage', arabic: 'ساندوتش سجق', price: 8.00, qty: 0 },
+        { code: 'S3', name: 'Kofta (ground beef)', arabic: 'ساندوتش كفتة', price: 10.00, qty: 0 },
+        { code: 'S4', name: 'Hawawshi (Ground Beef Pita)', arabic: 'حواشي', price: 10.00, qty: 0 },
+        { code: 'S5', name: 'Beef Shawerma', arabic: 'شاورمة لحمة', price: 10.00, qty: 0 },
+        { code: 'S6', name: 'Chicken Shawerma', arabic: 'شاورمة فراخ', price: 9.00, qty: 0 },
+        { code: 'S7', name: 'Feteer Savory Small', arabic: 'فطير حادق صغير', price: 15.00, qty: 0 },
+        { code: 'S8', name: 'Feteer Savory Large', arabic: 'فطير حادق كبير', price: 25.00, qty: 0 },
+        { code: 'S9', name: 'Feteer Sweet Small', arabic: 'فطير حلو صغير', price: 10.00, qty: 0 },
+        { code: 'S10', name: 'Feteer Sweet Large', arabic: 'فطير حلو كبير', price: 20.00, qty: 0 },
+        { code: 'S11', name: 'Plain Feteer Small', arabic: 'فطير سادة صغير', price: 5.00, qty: 0 }
       ],
       mains: [
         { code: 'M1', name: '1 Piece Kofta (grilled)', arabic: 'واحدة كفتة', price: 3.00, qty: 0 },
@@ -418,215 +380,18 @@
         { code: 'M4', name: '5 Stuffed Grape Leaves', arabic: 'محشي ورق عنب', price: 3.00, qty: 0 },
         { code: 'M5', name: '2 Piece Mombar (Sausage)', arabic: 'ممبار', price: 3.00, qty: 0 },
         { code: 'M6', name: 'Bechamel Pasta', arabic: 'مكرونة بشاميل', price: 10.00, qty: 0 },
-        { code: 'M7', name: '2 Cheese Goulash', arabic: 'جلاش جبنة', price: 5.00, qty: 0 },
-        { code: 'M8', name: '1 Beef Goulash', arabic: 'جلاش لحمة', price: 3.00, qty: 0 },
-        { code: 'M9', name: 'Lamb Shank & Rice Meal', arabic: 'موزة خروف مع رز وورق عنب', price: 20.00, qty: 0 },
-        { code: 'M10', name: '1/2 Grilled Chicken & Rice', arabic: 'نص فرخة مشوية مع رز', price: 15.00, qty: 0 },
-        { code: 'M11', name: 'Beef Hooves & Rice', arabic: 'كوارع مع رز وورق عنب', price: 15.00, qty: 0 },
-        { code: 'M12', name: 'Rice with Nuts', arabic: 'رز بالخلطة', price: 3.00, qty: 0 },
-        { code: 'M13', name: 'Chicken Quesadilla', arabic: 'فراخ بالجبنة', price: 9.00, qty: 0 },
-        { code: 'M14', name: '4 Chicken Wings & Fries', arabic: 'أجنحة وبطاطس', price: 5.00, qty: 0 },
-        { code: 'M15', name: 'Duck Leg & Rice', arabic: 'بطة ورز', price: 10.00, qty: 0 }
+        { code: 'M7', name: 'Lamb Shank & Rice Meal', arabic: 'موزة خروف مع رز وورق عنب', price: 20.00, qty: 0 },
+        { code: 'M8', name: '1/2 Grilled Chicken & Rice', arabic: 'نص فرخة مشوية مع رز', price: 15.00, qty: 0 },
+        { code: 'M9', name: 'Rice with Nuts', arabic: 'رز بالخلطة', price: 3.00, qty: 0 },
+        { code: 'M10', name: 'Chicken Quesadilla', arabic: 'فراخ بالجبنة', price: 9.00, qty: 0 },
+        { code: 'M11', name: '4 Chicken Wings & Fries', arabic: 'أجنحة وبطاطس', price: 5.00, qty: 0 },
+        { code: 'M12', name: 'Duck Leg & Rice', arabic: 'بطة ورز', price: 10.00, qty: 0 }
       ]
     };
 
-    let isScanning = false;
+    let scanning = false;
+    let stream = null;
 
-    // Start scan
-    window.startScan = function() {
-      document.getElementById('fileInput').click();
-    };
-
-    // Handle file selection
-    document.getElementById('fileInput').addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      // Show preview
-      const reader = new FileReader();
-      reader.onload = function(ev) {
-        document.getElementById('previewImage').src = ev.target.result;
-        document.getElementById('previewImage').style.display = 'block';
-      };
-      reader.readAsDataURL(file);
-      
-      // Start OCR
-      await performOCR(file);
-      this.value = '';
-    });
-
-    async function performOCR(imageFile) {
-      if (isScanning) return;
-      isScanning = true;
-      
-      const scanBtn = document.getElementById('scanBtn');
-      const progressBar = document.getElementById('progressBar');
-      const progressFill = document.getElementById('progressFill');
-      const statusText = document.getElementById('statusText');
-      const scannedCount = document.getElementById('scannedCount');
-      
-      scanBtn.classList.add('scanning');
-      scanBtn.textContent = '🔍 Scanning...';
-      progressBar.style.display = 'block';
-      statusText.style.display = 'block';
-      scannedCount.style.display = 'none';
-      
-      try {
-        statusText.textContent = 'Loading OCR engine...';
-        progressFill.style.width = '10%';
-        
-        // Create image URL
-        const imageUrl = URL.createObjectURL(imageFile);
-        
-        // Run Tesseract OCR
-        const worker = await Tesseract.createWorker('eng');
-        progressFill.style.width = '30%';
-        statusText.textContent = 'Recognizing text...';
-        
-        const result = await worker.recognize(imageUrl);
-        progressFill.style.width = '80%';
-        statusText.textContent = 'Processing results...';
-        
-        const text = result.data.text;
-        console.log('OCR Result:', text);
-        
-        // Parse the OCR text to find quantities
-        const parsedItems = parseOrderSlip(text);
-        
-        progressFill.style.width = '100%';
-        statusText.textContent = `Found ${parsedItems.length} items!`;
-        scannedCount.textContent = `${parsedItems.length} items detected`;
-        scannedCount.style.display = 'inline-block';
-        
-        // Apply parsed quantities
-        applyParsedQuantities(parsedItems);
-        
-        await worker.terminate();
-        URL.revokeObjectURL(imageUrl);
-        
-      } catch (error) {
-        console.error('OCR Error:', error);
-        statusText.textContent = '⚠️ Scan failed. Try again or enter manually.';
-      }
-      
-      // Reset UI
-      setTimeout(() => {
-        scanBtn.classList.remove('scanning');
-        scanBtn.textContent = '📸 Scan Order Slip';
-        progressBar.style.display = 'none';
-        progressFill.style.width = '0%';
-        isScanning = false;
-      }, 2000);
-    }
-
-    function parseOrderSlip(ocrText) {
-      const items = [];
-      const lines = ocrText.split('\n');
-      
-      // Known item keywords to match against OCR text
-      const itemPatterns = [
-        // Sandwiches
-        { keywords: ['beef liver', 'kebda', 'liver', 'كبدة'], code: 'B1' },
-        { keywords: ['egyptian sausage', 'sausage', 'سجق'], code: 'B2' },
-        { keywords: ['kofta', 'ground beef', 'كفتة'], code: 'B3', excludeMain: true },
-        { keywords: ['hawawshi', 'حواشي'], code: 'B4' },
-        { keywords: ['beef shawerma', 'shawerma', 'شاورمة لحمة'], code: 'B5' },
-        { keywords: ['chicken shawerma', 'شاورمة فراخ'], code: 'B6' },
-        { keywords: ['feteer savory small', 'فطير حادق صغير'], code: 'B7' },
-        { keywords: ['feteer savory large', 'فطير حادق كبير'], code: 'B8' },
-        { keywords: ['feteer sweet small', 'فطير حلو صغير'], code: 'B9' },
-        { keywords: ['feteer sweet large', 'فطير حلو كبير'], code: 'B10' },
-        { keywords: ['plain feteer', 'فطير سادة'], code: 'B11' },
-        { keywords: ['crepe', 'waffle', 'sauce only'], code: 'B12' },
-        { keywords: ['crepe', 'waffle', 'topping'], code: 'B13' },
-        // Main Dishes
-        { keywords: ['piece kofta', 'kofta grilled', 'واحدة كفتة'], code: 'M1' },
-        { keywords: ['beef kebab', 'كباب لحم'], code: 'M2' },
-        { keywords: ['chicken kebab', 'كباب فراخ'], code: 'M3' },
-        { keywords: ['stuffed grape', 'grape leaves', 'ورق عنب', 'محشي'], code: 'M4' },
-        { keywords: ['mombar', 'ممبار'], code: 'M5' },
-        { keywords: ['bechamel', 'بشاميل', 'pasta'], code: 'M6' },
-        { keywords: ['cheese goulash', 'جلاش جبنة'], code: 'M7' },
-        { keywords: ['beef goulash', 'جلاش لحمة'], code: 'M8' },
-        { keywords: ['lamb shank', 'موزة خروف', 'lamb'], code: 'M9' },
-        { keywords: ['grilled chicken', 'نص فرخة', '1/2 chicken'], code: 'M10' },
-        { keywords: ['beef hooves', 'كوارع', 'hooves'], code: 'M11' },
-        { keywords: ['rice with nuts', 'رز بالخلطة', 'nuts'], code: 'M12' },
-        { keywords: ['quesadilla', 'فراخ بالجبنة'], code: 'M13' },
-        { keywords: ['chicken wings', 'اجنحة', 'wings'], code: 'M14' },
-        { keywords: ['duck leg', 'بطة', 'duck'], code: 'M15' }
-      ];
-
-      // Try to find quantities near prices or after item names
-      for (const line of lines) {
-        const lowerLine = line.toLowerCase().trim();
-        if (!lowerLine) continue;
-        
-        // Look for a number that could be a quantity
-        const numberMatch = lowerLine.match(/(\d+)/);
-        
-        for (const pattern of itemPatterns) {
-          let matched = false;
-          for (const keyword of pattern.keywords) {
-            if (lowerLine.includes(keyword.toLowerCase())) {
-              matched = true;
-              break;
-            }
-          }
-          
-          if (matched && numberMatch) {
-            const qty = parseInt(numberMatch[1]);
-            // Filter reasonable quantities (1-99)
-            if (qty > 0 && qty < 100) {
-              // Check if this is likely a quantity (not a price like 7.00 or 15.00)
-              const pricePattern = /\$\s*\d+\.?\d*/;
-              const isPrice = pricePattern.test(lowerLine);
-              
-              // Only add if the number is standalone (not part of a price)
-              if (!isPrice || lowerLine.indexOf(numberMatch[0]) < lowerLine.indexOf('$')) {
-                items.push({ code: pattern.code, qty: qty });
-              }
-            }
-          }
-        }
-      }
-
-      // Remove duplicates, keep highest quantity
-      const uniqueItems = [];
-      const seenCodes = new Set();
-      for (const item of items) {
-        if (!seenCodes.has(item.code)) {
-          seenCodes.add(item.code);
-          uniqueItems.push(item);
-        }
-      }
-
-      return uniqueItems;
-    }
-
-    function applyParsedQuantities(parsedItems) {
-      // Reset all quantities first
-      for (const category in menuData) {
-        menuData[category].forEach(item => item.qty = 0);
-      }
-
-      // Apply parsed quantities
-      for (const parsed of parsedItems) {
-        for (const category in menuData) {
-          const item = menuData[category].find(i => i.code === parsed.code);
-          if (item) {
-            item.qty = parsed.qty;
-            break;
-          }
-        }
-      }
-
-      // Re-render
-      renderAll();
-      updateGrandTotal();
-    }
-
-    // Render all
     function renderAll() {
       renderCategory('sandwiches');
       renderCategory('mains');
@@ -637,7 +402,7 @@
       const items = menuData[category];
       
       panel.innerHTML = items.map((item, index) => `
-        <div class="menu-item">
+        <div class="menu-item" id="item-${item.code}">
           <span class="item-code">${item.code}</span>
           <div class="item-info">
             <span class="item-name">${item.name}</span>
@@ -646,7 +411,7 @@
           <span class="item-price">$${item.price.toFixed(2)}</span>
           <div class="qty-controls">
             <button class="qty-btn" onclick="changeQty('${category}', ${index}, -1)">−</button>
-            <input type="number" class="qty-input${item.qty > 0 ? ' scanned' : ''}" value="${item.qty}" min="0" 
+            <input type="number" class="qty-input" value="${item.qty}" min="0" 
               onchange="setQty('${category}', ${index}, this.value)" 
               onfocus="this.select()">
             <button class="qty-btn" onclick="changeQty('${category}', ${index}, 1)">+</button>
@@ -665,8 +430,7 @@
 
     window.setQty = function(category, index, value) {
       const item = menuData[category][index];
-      let qty = parseInt(value) || 0;
-      item.qty = Math.max(0, qty);
+      item.qty = Math.max(0, parseInt(value) || 0);
       renderAll();
       updateGrandTotal();
     };
@@ -681,6 +445,107 @@
       document.getElementById('grandTotal').textContent = '$' + total.toFixed(2);
     }
 
+    function addItemByCode(code) {
+      for (const category in menuData) {
+        const item = menuData[category].find(i => i.code === code);
+        if (item) {
+          item.qty += 1;
+          
+          // Highlight the item
+          setTimeout(() => {
+            const el = document.getElementById(`item-${code}`);
+            if (el) {
+              el.classList.add('just-scanned');
+              setTimeout(() => el.classList.remove('just-scanned'), 1500);
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+          
+          renderAll();
+          updateGrandTotal();
+          return item;
+        }
+      }
+      return null;
+    }
+
+    async function toggleScanner() {
+      if (scanning) {
+        stopScanner();
+        return;
+      }
+      
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        
+        const video = document.getElementById('scannerVideo');
+        video.srcObject = stream;
+        
+        document.getElementById('scannerView').classList.add('active');
+        document.getElementById('scanBtn').classList.add('active');
+        document.getElementById('scanBtn').textContent = '⏹ Stop Scanning';
+        document.getElementById('scanStatus').textContent = '📷 Point camera at QR codes...';
+        scanning = true;
+        
+        scanLoop();
+      } catch (err) {
+        document.getElementById('scanStatus').textContent = '⚠️ Camera access denied';
+        console.error(err);
+      }
+    }
+
+    function stopScanner() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      scanning = false;
+      document.getElementById('scannerView').classList.remove('active');
+      document.getElementById('scanBtn').classList.remove('active');
+      document.getElementById('scanBtn').textContent = '📷 Scan QR Codes';
+      document.getElementById('scanStatus').textContent = 'Tap button to start scanning QR codes';
+    }
+
+    function scanLoop() {
+      if (!scanning) return;
+      
+      const video = document.getElementById('scannerVideo');
+      const canvas = document.createElement('canvas');
+      
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height);
+        
+        if (code && code.data.startsWith('COPTC:')) {
+          const parts = code.data.split(':');
+          if (parts.length >= 3) {
+            const itemCode = parts[1];
+            const item = addItemByCode(itemCode);
+            if (item) {
+              document.getElementById('scanStatus').textContent = 
+                `✅ Added: ${item.name} (${itemCode})`;
+              
+              // Brief pause to prevent multiple scans
+              stopScanner();
+              setTimeout(() => {
+                if (!scanning) toggleScanner();
+              }, 1500);
+              return;
+            }
+          }
+        }
+      }
+      
+      requestAnimationFrame(scanLoop);
+    }
+
     window.resetAll = function() {
       if (confirm('Clear all quantities?')) {
         for (const category in menuData) {
@@ -688,8 +553,6 @@
         }
         renderAll();
         updateGrandTotal();
-        document.getElementById('scannedCount').style.display = 'none';
-        document.getElementById('previewImage').style.display = 'none';
       }
     };
 
@@ -700,18 +563,4 @@
       document.getElementById('mains-panel').classList.remove('active');
       
       if (tab === 'sandwiches') {
-        document.getElementById('tab-sandwiches').classList.add('active');
-        document.getElementById('sandwiches-panel').classList.add('active');
-      } else {
-        document.getElementById('tab-mains').classList.add('active');
-        document.getElementById('mains-panel').classList.add('active');
-      }
-    };
-
-    // Initialize
-    renderAll();
-    updateGrandTotal();
-    console.log('✅ OCR Scanner ready!');
-  </script>
-</body>
-</html>
+        document.getElementById('tab-sandwiches').classList.add('
