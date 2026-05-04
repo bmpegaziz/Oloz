@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Our Lady of Zeitoun · Coptic Festival - Order Slip</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f7f3e8;
+      background-image: radial-gradient(circle at 10% 20%, rgba(220, 190, 140, 0.12) 0%, transparent 35%);
+      font-family: 'Segoe UI', 'Candara', 'Palatino', 'Georgia', serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+      margin: 0;
+    }
+
+    .order-slip {
+      max-width: 1000px;
+      width: 100%;
+      background: #fffef9;
+      background: linear-gradient(145deg, #fffdf7 0%, #fefbf2 100%);
+      border-radius: 3rem 3rem 2.5rem 2.5rem;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.08), 0 15px 25px rgba(80, 40, 20, 0.1);
+      padding: 2.5rem 2.2rem 2.8rem;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .order-slip::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.04"><path d="M20 20 L30 15 L40 20 L35 30 L25 30 Z" fill="%23b49450"/><circle cx="70" cy="70" r="6" fill="%23b49450"/><path d="M80 25 L88 25 L88 33 L80 33 Z" fill="%23b49450"/></svg>');
+      background-size: 180px 180px;
+      pointer-events: none;
+    }
+
+    /* Header */
+    .slip-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .church-name {
+      font-family: 'Palatino', 'Georgia', serif;
+      font-size: 2.4rem;
+      font-weight: 600;
+      color: #4e3b28;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      line-height: 1.3;
+      text-shadow: 1px 1px 0 rgba(255,255,240,0.9);
+      border-bottom: 3px double #d4a843;
+      display: inline-block;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .sub-title {
+      font-size: 1.6rem;
+      font-weight: 400;
+      color: #7b5e3b;
+      font-style: italic;
+      margin-top: 0.3rem;
+      letter-spacing: 0.7px;
+      font-family: 'Georgia', serif;
+    }
+
+    .address {
+      font-size: 1rem;
+      color: #6b5a44;
+      background: rgba(235, 215, 170, 0.25);
+      padding: 0.5rem 2rem;
+      border-radius: 30px;
+      margin-top: 0.5rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      display: inline-block;
+    }
+
+    .festival-banner {
+      font-size: 1.5rem;
+      margin-top: 0.8rem;
+      color: #b48b3a;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* Two-column layout */
+    .menu-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin: 2rem 0 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .menu-column {
+      background: rgba(255, 251, 242, 0.7);
+      backdrop-filter: blur(2px);
+      border-radius: 2.4rem;
+      padding: 1.8rem 1.8rem 1.8rem;
+      box-shadow: 0 8px 20px rgba(140, 100, 50, 0.08);
+      border: 1px solid rgba(202, 160, 80, 0.25);
+      transition: all 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .menu-column:hover {
+      box-shadow: 0 15px 28px rgba(120, 80, 30, 0.12);
+      border-color: rgba(184, 138, 55, 0.4);
+      background: rgba(255, 252, 245, 0.8);
+    }
+
+    .column-title {
+      font-family: 'Palatino', 'Georgia', serif;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #3e2e1c;
+      text-align: center;
+      border-bottom: 2px solid #d9b56a;
+      padding-bottom: 0.6rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .column-title span {
+      background: #f3e5ca;
+      padding: 0.3rem 1.5rem;
+      border-radius: 40px;
+      font-size: 1.5rem;
+    }
+
+    /* Table styling */
+    .menu-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .menu-table thead th {
+      text-align: left;
+      padding: 0.5rem 0.4rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #d9b56a;
+      font-weight: 700;
+      color: #3e2e1c;
+      background: #fdf8ed;
+    }
+
+    .menu-table thead th:first-child {
+      width: 55%;
+    }
+
+    .menu-table thead th:nth-child(2) {
+      width: 15%;
+      text-align: center;
+    }
+
+    .menu-table thead th:nth-child(3) {
+      width: 10%;
+      text-align: center;
+    }
+
+    .menu-table thead th:nth-child(4) {
+      width: 20%;
+      text-align: center;
+    }
+
+    .menu-table tbody td {
+      padding: 0.5rem 0.4rem;
+      border-bottom: 1px dotted rgba(160, 120, 60, 0.25);
+      vertical-align: middle;
+      color: #3f3322;
+    }
+
+    .menu-table .item-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-align: left;
+      color: #3f3322;
+    }
+
+    .arabic-name {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: #8b754f;
+      font-style: italic;
+      display: block;
+      margin-top: 0.1rem;
+    }
+
+    .menu-table .price-cell {
+      text-align: center;
+      font-weight: 700;
+      color: #2d5e3b;
+      font-size: 0.95rem;
+    }
+
+    .menu-table .qty-cell {
+      text-align: center;
+    }
+
+    .empty-box {
+      display: inline-block;
+      width: 45px;
+      height: 26px;
+      border: 1.5px solid #c9a855;
+      background: white;
+      vertical-align: middle;
+      border-radius: 6px;
+    }
+
+    .menu-table .total-cell {
+      text-align: center;
+    }
+
+    .total-box {
+      display: inline-block;
+      width: 60px;
+      height: 26px;
+      border: 1.5px solid #c9a855;
+      background: white;
+      vertical-align: middle;
+      border-radius: 6px;
+    }
+
+    /* Grand Total */
+    .grand-total-section {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      position: relative;
+      z-index: 2;
+      background: #f9f2e0;
+      padding: 1.2rem 2.2rem;
+      border-radius: 50px;
+      border: 1px solid #ddbc7a;
+    }
+
+    .grand-total-label {
+      font-family: 'Georgia', serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #5c471f;
+    }
+
+    .grand-total-box {
+      background: white;
+      padding: 0.5rem 2.5rem;
+      border-radius: 3rem;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2b4f2b;
+      box-shadow: inset 0 1px 5px rgba(0,0,0,0.05);
+      font-family: 'Courier New', monospace;
+      min-width: 160px;
+      text-align: center;
+      border: 1px solid #ddbc7a;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #6f5e3f;
+      font-style: italic;
+      font-size: 1rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .order-slip {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .menu-columns {
+        grid-template-columns: 1fr;
+      }
+      .order-slip {
+        padding: 1.5rem 1rem;
+      }
+      .church-name {
+        font-size: 1.8rem;
+      }
+      .festival-banner {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="order-slip">
+    
+    <!-- Header -->
+    <div class="slip-header">
+      <div class="church-name">Our Lady of Zeitoun</div>
+      <div class="sub-title">Coptic Orthodox Church</div>
+      <div class="address">500 Toth Hill Road, Staten Island, NY 10314</div>
+      <div class="festival-banner">✦ Annual Egyptian Coptic Festival ✦</div>
+    </div>
+
+    <!-- Two Column Menu -->
+    <div class="menu-columns">
+      
+      <!-- Left Column: Sandwiches & Pastries -->
+      <div class="menu-column">
+        <div class="column-title"><span>🥙 Sandwiches & Pastries</span></div>
+        <table class="menu-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="item-name">Beef Liver (Kebda) <span class="arabic-name">ساندوتش كبدة</span></td>
+              <td class="price-cell">$7.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Egyptian Sausage <span class="arabic-name">ساندوتش سجق</span></td>
+              <td class="price-cell">$8.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Kofta (ground beef) <span class="arabic-name">ساندوتش كفتة</span></td>
+              <td class="price-cell">$10.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Hawawshi (Ground Beef Pita) <span class="arabic-name">حواشي</span></td>
+              <td class="price-cell">$10.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Beef Shawerma <span class="arabic-name">شاورمة لحمة</span></td>
+              <td class="price-cell">$10.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Chicken Shawerma <span class="arabic-name">شاورمة فراخ</span></td>
+              <td class="price-cell">$9.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Feteer Savory Small <span class="arabic-name">فطير حادق صغير</span></td>
+              <td class="price-cell">$15.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Feteer Savory Large <span class="arabic-name">فطير حادق كبير</span></td>
+              <td class="price-cell">$25.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Feteer Sweet Small <span class="arabic-name">فطير حلو صغير</span></td>
+              <td class="price-cell">$10.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Feteer Sweet Large <span class="arabic-name">فطير حلو كبير</span></td>
+              <td class="price-cell">$20.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Plain Feteer Small <span class="arabic-name">فطير سادة صغير</span></td>
+              <td class="price-cell">$5.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Crepe / Waffles (sauce only)</td>
+              <td class="price-cell">$5.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Crepe / Waffles (toppings)</td>
+              <td class="price-cell">$7.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Right Column: Main Dishes & Sides -->
+      <div class="menu-column">
+        <div class="column-title"><span>🍖 Main Dishes & Sides</span></div>
+        <table class="menu-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="item-name">1 Piece Kofta (grilled) <span class="arabic-name">واحدة كفتة</span></td>
+              <td class="price-cell">$3.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Beef Kebab Skewer <span class="arabic-name">كباب لحم</span></td>
+              <td class="price-cell">$8.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Chicken Kebab Skewer <span class="arabic-name">كباب فراخ</span></td>
+              <td class="price-cell">$7.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">5 Stuffed Grape Leaves <span class="arabic-name">محشي ورق عنب</span></td>
+              <td class="price-cell">$3.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">2 Piece Mombar (Sausage) <span class="arabic-name">ممبار</span></td>
+              <td class="price-cell">$3.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Bechamel Pasta <span class="arabic-name">مكرونة بشاميل</span></td>
+              <td class="price-cell">$10.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">2 Cheese Goulash <span class="arabic-name">جلاش جبنة</span></td>
+              <td class="price-cell">$5.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">1 Beef Goulash <span class="arabic-name">جلاش لحمة</span></td>
+              <td class="price-cell">$3.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Lamb Shank & Rice Meal <span class="arabic-name">موزة خروف مع رز وورق عنب</span></td>
+              <td class="price-cell">$20.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">1/2 Grilled Chicken & Rice <span class="arabic-name">نص فرخة مشوية مع رز</span></td>
+              <td class="price-cell">$15.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Beef Hooves & Rice <span class="arabic-name">كوارع مع رز وورق عنب</span></td>
+              <td class="price-cell">$15.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Rice with Nuts <span class="arabic-name">رز بالخلطة</span></td>
+              <td class="price-cell">$3.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Chicken Quesadilla <span class="arabic-name">فراخ بالجبنة</span></td>
+              <td class="price-cell">$9.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">4 Chicken Wings & Fries <span class="arabic-name">أجنحة وبطاطس</span></td>
+              <td class="price-cell">$5.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+            <tr>
+              <td class="item-name">Duck Leg & Rice <span class="arabic-name">بطة ورز</span></td>
+              <td class="price-cell">$10.00</td>
+              <td class="qty-cell"><span class="empty-box"></span></td>
+              <td class="total-cell"><span class="total-box"></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Grand Total -->
+    <div class="grand-total-section">
+      <span class="grand-total-label">📋 GRAND TOTAL</span>
+      <span class="grand-total-box">$________</span>
+    </div>
+    
+    <div class="footer-note">
+      ⚜️ Blessed festival · authentic Egyptian flavors ⚜️
+    </div>
+  </div>
+</body>
+</html>
