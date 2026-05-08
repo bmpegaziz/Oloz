@@ -33,7 +33,7 @@
       background: linear-gradient(160deg, #8B1A1A 0%, #4A0A0A 100%); padding: 24px;
     }
     .login-card { background: #fff; border-radius: 20px; padding: 36px 28px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
-    .login-cross { color: var(--gold); font-size: 40px; display: block; margin-bottom: 10px; }
+    .logo { width: 80px; height: auto; display: block; margin: 0 auto 10px; }
     .login-card h1 { font-size: 20px; font-weight: 700; color: var(--red); margin-bottom: 4px; }
     .login-card .sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
     .login-card input {
@@ -189,7 +189,7 @@
 <!-- ── Login Screen ── -->
 <div id="loginScreen">
   <div class="login-card">
-    <span class="login-cross">☩</span>
+    <img src="logo.png" class="logo" alt="Logo">
     <h1>Convention Questions</h1>
     <p class="sub">Admin Dashboard · Enter password to continue</p>
     <input type="password" id="pwIn" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
