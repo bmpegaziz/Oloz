@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,136 +8,106 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --red: #7B1A1A; --red-dark: #5A1010; --gold: #C8A84B;
-      --bg: #F2EDE7; --card: #fff;
-      --border: #E0D5C8; --text: #1A0A0A; --muted: #777;
+      --bg: #F2EDE7; --card: #fff; --border: #E0D5C8; --text: #1A0A0A; --muted: #777;
       --answered-opacity: 0.45;
     }
     body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--text); }
 
-    /* ─── Setup banner ─── */
-    #setupBanner {
-      background: #FFF3CD; border-bottom: 2px solid #FFC107; padding: 12px 20px;
-      font-size: 13px; line-height: 1.6; display: none;
-    }
-    #setupBanner strong { color: #856404; }
-    #setupBanner ol { margin: 6px 0 0 20px; }
-    #setupBanner li { margin-bottom: 2px; }
+    /* ─── Login ─── */
+    #loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, #8B1A1A 0%, #4A0A0A 100%); padding: 24px; }
+    .login-card { background: #fff; border-radius: 20px; padding: 36px 28px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+    .logo { width: 80px; height: auto; display: block; margin: 0 auto 12px; }
+    .login-card h1 { font-size: 21px; font-weight: 700; color: var(--red); margin-bottom: 4px; }
+    .login-card .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
 
-    /* ─── Login screen ─── */
-    #loginScreen {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(160deg, #8B1A1A 0%, #4A0A0A 100%); padding: 24px;
-    }
-    .login-card { background: #fff; border-radius: 20px; padding: 36px 28px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
-    .logo { width: 80px; height: auto; display: block; margin: 0 auto 10px; }
-    .login-card h1 { font-size: 20px; font-weight: 700; color: var(--red); margin-bottom: 4px; }
-    .login-card .sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
-    .login-card input {
-      width: 100%; border: 2px solid var(--border); border-radius: 12px;
-      padding: 13px 16px; font-size: 16px; font-family: inherit; outline: none;
-      transition: border-color .15s; margin-bottom: 14px; -webkit-appearance: none;
-      letter-spacing: 3px; text-align: center;
-    }
+    .lang-bar-login { display: flex; justify-content: center; margin-bottom: 18px; }
+    .lang-toggle { display: flex; background: #F0E8E0; border-radius: 20px; padding: 3px; }
+    .lang-btn { background: transparent; border: none; color: var(--muted); padding: 6px 16px; border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .lang-btn.active { background: var(--red); color: #fff; }
+
+    .role-select { display: flex; gap: 8px; margin-bottom: 20px; }
+    .role-btn { flex: 1; padding: 12px; border-radius: 10px; border: 2px solid var(--border); background: #fff; color: var(--muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .role-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+
+    .login-card input { width: 100%; border: 2px solid var(--border); border-radius: 12px; padding: 13px 16px; font-size: 16px; font-family: inherit; outline: none; transition: border-color .15s; margin-bottom: 14px; -webkit-appearance: none; letter-spacing: 3px; text-align: center; }
     .login-card input:focus { border-color: var(--red); }
     .login-card input.shake { animation: shake .3s; border-color: #E53E3E; }
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      20%,60% { transform: translateX(-6px); }
-      40%,80% { transform: translateX(6px); }
-    }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
     .login-err { color: #E53E3E; font-size: 13px; margin-bottom: 12px; min-height: 18px; }
-    .btn-login {
-      width: 100%; background: var(--red); color: #fff; border: none; border-radius: 12px;
-      padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s;
-    }
+    .btn-login { width: 100%; background: var(--red); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s; font-family: inherit; }
     .btn-login:hover { background: var(--red-dark); }
 
-    /* ─── Dashboard: topbar ─── */
+    /* ─── Dashboard ─── */
     #dashboard { display: none; min-height: 100vh; }
-    .topbar {
-      background: var(--red); color: #fff; padding: 0 16px;
-      display: flex; align-items: center; gap: 10px; height: 54px;
-      position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.2);
-    }
-    .topbar .title { font-size: 17px; font-weight: 700; flex: 1; }
+    .topbar { background: var(--red); color: #fff; padding: 0 12px; display: flex; align-items: center; gap: 8px; height: 58px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+    .topbar-logo { width: 36px; height: 36px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
+    .topbar .title { font-size: 15px; font-weight: 700; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .topbar .title span { color: var(--gold); }
-    .topbar-btn {
-      background: rgba(255,255,255,.15); border: none; color: #fff; border-radius: 8px;
-      padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s;
-    }
-    .topbar-btn:hover { background: rgba(255,255,255,.25); }
+    .role-chip { background: rgba(255,255,255,.2); border-radius: 12px; padding: 4px 10px; font-size: 12px; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+    .lang-toggle-top { display: flex; background: rgba(255,255,255,.15); border-radius: 16px; padding: 2px; flex-shrink: 0; }
+    .lang-toggle-top .lang-btn { color: rgba(255,255,255,.8); padding: 4px 10px; border-radius: 12px; font-size: 12px; }
+    .lang-toggle-top .lang-btn.active { background: #fff; color: var(--red); }
+    .topbar-btn { background: rgba(255,255,255,.15); border: none; color: #fff; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s; font-family: inherit; flex-shrink: 0; white-space: nowrap; }
+    .topbar-btn:hover { background: rgba(255,255,255,.28); }
 
-    /* ─── Stats bar ─── */
-    .stats-bar {
-      display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
-      padding: 14px 12px 10px; background: #fff; border-bottom: 1px solid var(--border);
-    }
+    /* ─── Stats ─── */
+    .stats-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 14px 12px 10px; background: #fff; border-bottom: 1px solid var(--border); }
     .stat { text-align: center; }
-    .stat .n { font-size: 22px; font-weight: 800; color: var(--red); }
-    .stat .l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-top: 1px; }
+    .stat .n { font-size: 26px; font-weight: 800; color: var(--red); }
+    .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-top: 2px; }
     .stat.priority .n { color: var(--gold); }
     .stat.pending .n { color: #2980B9; }
     .stat.answered .n { color: #27AE60; }
 
-    /* ─── Filter tabs ─── */
-    .tabs {
-      display: flex; background: #fff; border-bottom: 1px solid var(--border);
-      position: sticky; top: 54px; z-index: 90;
-    }
-    .tab {
-      flex: 1; padding: 11px 4px; text-align: center; font-size: 13px; font-weight: 600;
-      color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent;
-      transition: all .15s; user-select: none; border-left: none; border-right: none;
-      border-top: none; background: transparent;
-    }
+    /* ─── Tabs ─── */
+    .tabs { display: flex; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 58px; z-index: 90; }
+    .tab { flex: 1; padding: 13px 4px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all .15s; border: none; background: transparent; font-family: inherit; }
     .tab.on { color: var(--red); border-bottom-color: var(--red); }
 
-    /* ─── Question list ─── */
-    .q-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; max-width: 720px; margin: 0 auto; }
-    .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 15px; }
-    .empty .icon { font-size: 40px; display: block; margin-bottom: 12px; opacity: .5; }
+    /* ─── List ─── */
+    .q-list { padding: 14px 12px; display: flex; flex-direction: column; gap: 12px; max-width: 900px; margin: 0 auto; }
+    .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 16px; }
+    .empty .icon { font-size: 44px; display: block; margin-bottom: 14px; opacity: .5; }
 
-    /* ─── Question card ─── */
-    .q-card {
-      background: var(--card); border-radius: 14px; padding: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.07); border-left: 4px solid transparent;
-      transition: opacity .2s, border-color .2s;
-    }
+    /* ─── Card ─── */
+    .q-card { background: var(--card); border-radius: 16px; padding: 20px 20px 16px; box-shadow: 0 2px 12px rgba(0,0,0,.08); border-left: 5px solid transparent; transition: opacity .2s, border-color .2s; }
+    [dir="rtl"] .q-card { border-left: none; border-right: 5px solid transparent; }
     .q-card.is-priority { border-left-color: var(--gold); }
+    [dir="rtl"] .q-card.is-priority { border-right-color: var(--gold); border-left-color: transparent; }
     .q-card.is-answered { opacity: var(--answered-opacity); }
+    .q-card.sortable-ghost { opacity: 0.35; background: #eee; }
+    .q-card.sortable-chosen { box-shadow: 0 8px 32px rgba(0,0,0,.18); }
 
-    .q-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-    .q-num { font-size: 12px; font-weight: 700; color: var(--muted); }
-    .q-badge {
-      font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
-      text-transform: uppercase; letter-spacing: .5px;
-    }
+    /* ─── Card meta row ─── */
+    .q-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .q-num { font-size: 13px; font-weight: 700; color: var(--muted); }
+    .q-badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; }
     .badge-general { background: #F0ECE8; color: #888; }
     .badge-metropolitan { background: #EDE4F5; color: #6C3483; }
     .badge-bishop { background: #E4EEF8; color: #1F618D; }
     .badge-priority { background: #FEF9E7; color: #B7770D; }
     .badge-answered { background: #EAFAF1; color: #1E8449; }
+    .q-time { font-size: 12px; color: var(--muted); margin-left: auto; flex-shrink: 0; }
+    [dir="rtl"] .q-time { margin-left: 0; margin-right: auto; }
+    .drag-handle { font-size: 22px; color: #C8B8A8; cursor: grab; user-select: none; padding: 0 2px; line-height: 1; flex-shrink: 0; }
+    .drag-handle:active { cursor: grabbing; color: var(--gold); }
 
-    .q-time { font-size: 11px; color: var(--muted); margin-left: auto; }
-
-    .q-text {
-      font-size: 15px; line-height: 1.55; color: var(--text); margin-bottom: 10px;
-      font-weight: 500;
-    }
+    /* ─── Question text ─── */
+    .q-text { font-size: 18px; line-height: 1.65; color: var(--text); margin-bottom: 14px; font-weight: 500; }
     .q-card.is-answered .q-text { text-decoration: line-through; }
 
-    .q-author { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    /* Reader role: bigger display */
+    #dashboard.role-reader .q-card { padding: 24px 24px 20px; }
+    #dashboard.role-reader .q-text { font-size: 22px; line-height: 1.7; }
 
+    /* ─── Actions ─── */
     .q-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .act-btn {
-      flex: 1; min-width: 90px; padding: 8px 10px; border-radius: 9px; font-size: 13px;
-      font-weight: 600; cursor: pointer; border: 2px solid transparent;
-      transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 5px;
-    }
+    .act-btn { flex: 1; min-width: 100px; min-height: 46px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 5px; font-family: inherit; }
     .act-priority { background: #FEF9E7; color: #B7770D; border-color: #F9E79F; }
     .act-priority:hover, .act-priority.on { background: var(--gold); color: #fff; border-color: var(--gold); }
     .act-answered { background: #EAFAF1; color: #1E8449; border-color: #A9DFBF; }
@@ -145,79 +115,81 @@
     .act-delete { background: #FDEDEC; color: #C0392B; border-color: #F1948A; }
     .act-delete:hover { background: #E74C3C; color: #fff; border-color: #E74C3C; }
 
+    /* Reader: hide manager-only controls */
+    #dashboard.role-reader .act-priority { display: none; }
+    #dashboard.role-reader .act-delete { display: none; }
+    #dashboard.role-reader .drag-handle { display: none; }
+    #dashboard.role-reader .act-answered { min-height: 54px; font-size: 16px; }
+
     /* ─── QR Modal ─── */
-    #qrModal {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
-      z-index: 200; align-items: center; justify-content: center; padding: 20px;
-    }
+    #qrModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
     #qrModal.show { display: flex; }
-    .qr-card {
-      background: #fff; border-radius: 20px; padding: 28px 28px 24px;
-      text-align: center; width: 100%; max-width: 360px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.3);
-    }
+    .qr-card { background: #fff; border-radius: 20px; padding: 28px 28px 24px; text-align: center; width: 100%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
     .qr-card h2 { font-size: 16px; font-weight: 700; color: var(--red); margin-bottom: 6px; }
     .qr-card p { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
     #qrCode { display: flex; justify-content: center; margin-bottom: 16px; }
-    #qrCode canvas, #qrCode img { border-radius: 8px; }
     .qr-url { font-size: 11px; color: var(--muted); word-break: break-all; background: #F5F0EB; padding: 8px 10px; border-radius: 8px; margin-bottom: 20px; }
-    .btn-close { background: var(--red); color: #fff; border: none; border-radius: 12px; padding: 11px 28px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-close { background: var(--red); color: #fff; border: none; border-radius: 12px; padding: 11px 28px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
     .btn-close:hover { background: var(--red-dark); }
 
     /* ─── Toast ─── */
-    #toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-      background: #333; color: #fff; padding: 10px 20px; border-radius: 24px;
-      font-size: 14px; font-weight: 600; transition: transform .25s; z-index: 300; white-space: nowrap;
-    }
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #333; color: #fff; padding: 10px 20px; border-radius: 24px; font-size: 14px; font-weight: 600; transition: transform .25s; z-index: 300; white-space: nowrap; }
     #toast.show { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
 
-<!-- ── Setup Banner (shown when Firebase config is placeholder) ── -->
-<div id="setupBanner">
-  <strong>⚠️ Firebase Setup Required</strong> — Replace the placeholder values in this file before use.<br>
-  <ol>
-    <li>Go to <strong>console.firebase.google.com</strong> → Create project → Add web app</li>
-    <li>Enable <strong>Realtime Database</strong> (Build → Realtime Database → Create in test mode)</li>
-    <li>In <em>Project Settings → Your Apps → Config</em>, copy the config object</li>
-    <li>In both <code>questions-submit.html</code> and <code>questions-admin.html</code>, replace the <code>REPLACE_WITH_...</code> values</li>
-  </ol>
-</div>
-
 <!-- ── Login Screen ── -->
 <div id="loginScreen">
   <div class="login-card">
     <img src="logo.png" class="logo" alt="Logo">
-    <h1>Convention Questions</h1>
-    <p class="sub">Admin Dashboard · Enter password to continue</p>
+    <h1 id="lt-title">Convention Questions</h1>
+    <p class="sub" id="lt-sub">Admin Dashboard · Enter password to continue</p>
+
+    <div class="lang-bar-login">
+      <div class="lang-toggle">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('ar')">عربي</button>
+      </div>
+    </div>
+
+    <div class="role-select">
+      <button class="role-btn active" data-role="reader" onclick="selectRole(this)" id="lt-roleReader">Reader</button>
+      <button class="role-btn" data-role="manager" onclick="selectRole(this)" id="lt-roleManager">Manager</button>
+    </div>
+
     <input type="password" id="pwIn" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
     <div class="login-err" id="pwErr"></div>
-    <button class="btn-login" onclick="login()">Sign In</button>
+    <button class="btn-login" onclick="login()" id="lt-signIn">Sign In</button>
   </div>
 </div>
 
 <!-- ── Dashboard ── -->
 <div id="dashboard">
   <div class="topbar">
-    <div class="title">☩ <span>Faith, Truth &amp; Life</span> Questions</div>
-    <button class="topbar-btn" onclick="showQR()">📱 QR Code</button>
-    <button class="topbar-btn" onclick="logout()">Sign Out</button>
+    <img src="logo.png" class="topbar-logo" alt="Logo">
+    <div class="title" id="dt-title">☩ <span>Faith, Truth &amp; Life</span></div>
+    <span class="role-chip" id="dt-roleBadge">Reader</span>
+    <div class="lang-toggle-top">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('ar')">عربي</button>
+    </div>
+    <button class="topbar-btn" onclick="showQR()" id="dt-qr">📱 QR</button>
+    <button class="topbar-btn" onclick="logout()" id="dt-signOut">Sign Out</button>
   </div>
 
   <div class="stats-bar">
-    <div class="stat"><div class="n" id="sTotal">0</div><div class="l">Total</div></div>
-    <div class="stat priority"><div class="n" id="sPriority">0</div><div class="l">Priority</div></div>
-    <div class="stat pending"><div class="n" id="sPending">0</div><div class="l">Pending</div></div>
-    <div class="stat answered"><div class="n" id="sAnswered">0</div><div class="l">Answered</div></div>
+    <div class="stat"><div class="n" id="sTotal">0</div><div class="l" id="st-total">Total</div></div>
+    <div class="stat priority"><div class="n" id="sPriority">0</div><div class="l" id="st-priority">Priority</div></div>
+    <div class="stat pending"><div class="n" id="sPending">0</div><div class="l" id="st-pending">Pending</div></div>
+    <div class="stat answered"><div class="n" id="sAnswered">0</div><div class="l" id="st-answered">Answered</div></div>
   </div>
 
   <div class="tabs">
-    <button class="tab on" data-f="all" onclick="setFilter(this)">All</button>
-    <button class="tab" data-f="priority" onclick="setFilter(this)">⭐ Priority</button>
-    <button class="tab" data-f="pending" onclick="setFilter(this)">Pending</button>
-    <button class="tab" data-f="answered" onclick="setFilter(this)">Answered</button>
+    <button class="tab on" data-f="all" onclick="setFilter(this)" id="tab-all">All</button>
+    <button class="tab" data-f="priority" onclick="setFilter(this)" id="tab-priority">⭐ Priority</button>
+    <button class="tab" data-f="pending" onclick="setFilter(this)" id="tab-pending">Pending</button>
+    <button class="tab" data-f="answered" onclick="setFilter(this)" id="tab-answered">Answered</button>
   </div>
 
   <div class="q-list" id="qList"></div>
@@ -226,11 +198,11 @@
 <!-- ── QR Modal ── -->
 <div id="qrModal">
   <div class="qr-card">
-    <h2>Scan to Submit Questions</h2>
-    <p>Share this QR code on screen or print it for attendees</p>
+    <h2 id="qr-title">Scan to Submit Questions</h2>
+    <p id="qr-sub">Share this QR code on screen or print it for attendees</p>
     <div id="qrCode"></div>
     <div class="qr-url" id="qrUrl"></div>
-    <button class="btn-close" onclick="closeQR()">Close</button>
+    <button class="btn-close" onclick="closeQR()" id="qr-close">Close</button>
   </div>
 </div>
 
@@ -238,10 +210,9 @@
 <div id="toast"></div>
 
 <script>
-  // ╔══════════════════════════════════════════════════════════════╗
-  // ║  FIREBASE SETUP — Replace all REPLACE_WITH_... values below ║
-  // ║  Same config as questions-submit.html                        ║
-  // ╚══════════════════════════════════════════════════════════════╝
+  const MANAGER_PASSWORD = "Coptic2026";
+  const READER_PASSWORD  = "Reader2026";
+
   const firebaseConfig = {
     apiKey:            "AIzaSyDu2nyYD0PmzGmPXrz8UCuswByXloTqSF8",
     authDomain:        "questions-13ca4.firebaseapp.com",
@@ -251,51 +222,147 @@
     messagingSenderId: "719956991966",
     appId:             "1:719956991966:web:ab885aebfb52c44b09c74f"
   };
-
-  const ADMIN_PASSWORD = "Coptic2026";
-
-  // Show setup banner if config is still placeholder
-  if (firebaseConfig.apiKey === "REPLACE_WITH_YOUR_API_KEY") {
-    document.getElementById('setupBanner').style.display = 'block';
-  }
-
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // ── Auth ──
+  // ── Translations ──
+  const T = {
+    en: {
+      loginTitle: 'Convention Questions',
+      loginSub: 'Admin Dashboard · Enter password to continue',
+      roleReader: 'Reader', roleManager: 'Manager',
+      signIn: 'Sign In', pwPlaceholder: 'Password',
+      pwError: 'Incorrect password. Try again.',
+      dashTitle: '☩ <span>Faith, Truth &amp; Life</span>',
+      badgeReader: 'Reader', badgeManager: 'Manager',
+      btnQR: '📱 QR', btnSignOut: 'Sign Out',
+      statTotal: 'Total', statPriority: 'Priority', statPending: 'Pending', statAnswered: 'Answered',
+      tabAll: 'All', tabPriority: '⭐ Priority', tabPending: 'Pending', tabAnswered: 'Answered',
+      actPriority: '☆ Priority', actPriorityOn: '⭐ Priority',
+      actAnswered: '○ Answered', actAnsweredOn: '✓ Answered',
+      actDelete: '🗑 Delete',
+      delConfirm: p => `Delete this question?\n\n"${p}"\n\nThis cannot be undone.`,
+      empty: 'No questions yet.',
+      qrTitle: 'Scan to Submit Questions',
+      qrSub: 'Share this QR code on screen or print it for attendees',
+      close: 'Close', deleted: 'Question deleted',
+      justNow: 'just now',
+      minAgo: n => `${n} min ago`, hrAgo: n => `${n} hr ago`, dAgo: n => `${n} d ago`,
+    },
+    ar: {
+      loginTitle: 'أسئلة المؤتمر',
+      loginSub: 'لوحة التحكم · أدخل كلمة المرور للمتابعة',
+      roleReader: 'قارئ', roleManager: 'مدير',
+      signIn: 'تسجيل الدخول', pwPlaceholder: 'كلمة المرور',
+      pwError: 'كلمة المرور غير صحيحة. حاول مرة أخرى.',
+      dashTitle: '☩ <span>الإيمان والحق والحياة</span>',
+      badgeReader: 'قارئ', badgeManager: 'مدير',
+      btnQR: '📱 QR', btnSignOut: 'خروج',
+      statTotal: 'الكل', statPriority: 'أولوية', statPending: 'معلقة', statAnswered: 'مُجابة',
+      tabAll: 'الكل', tabPriority: '⭐ أولوية', tabPending: 'معلقة', tabAnswered: 'مُجابة',
+      actPriority: '☆ أولوية', actPriorityOn: '⭐ أولوية',
+      actAnswered: '○ تم الإجابة', actAnsweredOn: '✓ تم الإجابة',
+      actDelete: '🗑 حذف',
+      delConfirm: p => `هل تريد حذف هذا السؤال؟\n\n"${p}"\n\nلا يمكن التراجع عن هذا.`,
+      empty: 'لا توجد أسئلة بعد.',
+      qrTitle: 'امسح للإجابة على الأسئلة',
+      qrSub: 'شارك رمز QR على الشاشة أو اطبعه للحضور',
+      close: 'إغلاق', deleted: 'تم حذف السؤال',
+      justNow: 'الآن',
+      minAgo: n => `منذ ${n} دق`, hrAgo: n => `منذ ${n} سا`, dAgo: n => `منذ ${n} يوم`,
+    }
+  };
+
+  let lang = localStorage.getItem('ftl_lang') || 'en';
+  let role = null;
+  let allQuestions = {};
+  let manualOrder = [];
+  let currentFilter = 'all';
+  let listenerStarted = false;
+  let sortableInst = null;
+
+  function setLang(l) {
+    lang = l;
+    localStorage.setItem('ftl_lang', l);
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.toggle('active', (l === 'en' && b.textContent === 'EN') || (l === 'ar' && b.textContent === 'عربي'));
+    });
+    applyTranslations();
+  }
+
+  function applyTranslations() {
+    const t = T[lang];
+    document.getElementById('lt-title').textContent = t.loginTitle;
+    document.getElementById('lt-sub').textContent = t.loginSub;
+    document.getElementById('lt-roleReader').textContent = t.roleReader;
+    document.getElementById('lt-roleManager').textContent = t.roleManager;
+    document.getElementById('lt-signIn').textContent = t.signIn;
+    document.getElementById('pwIn').placeholder = t.pwPlaceholder;
+    document.getElementById('dt-title').innerHTML = t.dashTitle;
+    document.getElementById('dt-roleBadge').textContent = role === 'manager' ? t.badgeManager : t.badgeReader;
+    document.getElementById('dt-qr').textContent = t.btnQR;
+    document.getElementById('dt-signOut').textContent = t.btnSignOut;
+    document.getElementById('st-total').textContent = t.statTotal;
+    document.getElementById('st-priority').textContent = t.statPriority;
+    document.getElementById('st-pending').textContent = t.statPending;
+    document.getElementById('st-answered').textContent = t.statAnswered;
+    document.getElementById('tab-all').textContent = t.tabAll;
+    document.getElementById('tab-priority').textContent = t.tabPriority;
+    document.getElementById('tab-pending').textContent = t.tabPending;
+    document.getElementById('tab-answered').textContent = t.tabAnswered;
+    document.getElementById('qr-title').textContent = t.qrTitle;
+    document.getElementById('qr-sub').textContent = t.qrSub;
+    document.getElementById('qr-close').textContent = t.close;
+    if (listenerStarted) renderList();
+  }
+
+  setLang(lang);
+
+  function selectRole(btn) {
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
   function login() {
     const pw = document.getElementById('pwIn').value;
-    if (pw === ADMIN_PASSWORD) {
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      sessionStorage.setItem('ftl_auth', '1');
-      startListener();
+    const isManager = pw === MANAGER_PASSWORD;
+    const isReader  = pw === READER_PASSWORD;
+    if (isManager || isReader) {
+      role = isManager ? 'manager' : 'reader';
+      showDashboard();
     } else {
       const input = document.getElementById('pwIn');
       input.classList.add('shake');
       setTimeout(() => input.classList.remove('shake'), 350);
-      document.getElementById('pwErr').textContent = 'Incorrect password. Try again.';
+      document.getElementById('pwErr').textContent = T[lang].pwError;
       input.value = '';
       input.focus();
     }
   }
 
-  function logout() {
-    sessionStorage.removeItem('ftl_auth');
-    location.reload();
-  }
-
-  // Auto-login if already authenticated this session
-  if (sessionStorage.getItem('ftl_auth')) {
+  function showDashboard() {
     document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
+    const dash = document.getElementById('dashboard');
+    dash.style.display = 'block';
+    dash.className = 'role-' + role;
+    sessionStorage.setItem('ftl_auth', '1');
+    sessionStorage.setItem('ftl_role', role);
+    document.getElementById('dt-roleBadge').textContent = role === 'manager' ? T[lang].badgeManager : T[lang].badgeReader;
     startListener();
   }
 
-  // ── Data ──
-  let allQuestions = {};
-  let currentFilter = 'all';
-  let listenerStarted = false;
+  function logout() {
+    sessionStorage.removeItem('ftl_auth');
+    sessionStorage.removeItem('ftl_role');
+    location.reload();
+  }
+
+  if (sessionStorage.getItem('ftl_auth')) {
+    role = sessionStorage.getItem('ftl_role') || 'reader';
+    showDashboard();
+  }
 
   function startListener() {
     if (listenerStarted) return;
@@ -305,18 +372,18 @@
       updateStats();
       renderList();
     });
+    db.ref('questionOrder').on('value', snap => {
+      manualOrder = snap.val() || [];
+      renderList();
+    });
   }
 
   function updateStats() {
     const qs = Object.values(allQuestions);
-    const total = qs.length;
-    const priority = qs.filter(q => q.priority && !q.answered).length;
-    const answered = qs.filter(q => q.answered).length;
-    const pending = qs.filter(q => !q.answered).length;
-    document.getElementById('sTotal').textContent = total;
-    document.getElementById('sPriority').textContent = priority;
-    document.getElementById('sPending').textContent = pending;
-    document.getElementById('sAnswered').textContent = answered;
+    document.getElementById('sTotal').textContent = qs.length;
+    document.getElementById('sPriority').textContent = qs.filter(q => q.priority && !q.answered).length;
+    document.getElementById('sPending').textContent = qs.filter(q => !q.answered).length;
+    document.getElementById('sAnswered').textContent = qs.filter(q => q.answered).length;
   }
 
   function setFilter(el) {
@@ -326,70 +393,81 @@
     renderList();
   }
 
+  function applyOrder(entries) {
+    if (!manualOrder.length) return entries;
+    const idSet = new Set(entries.map(e => e.id));
+    const ordered = manualOrder.filter(id => idSet.has(id)).map(id => entries.find(e => e.id === id));
+    const extra = entries.filter(e => !manualOrder.includes(e.id));
+    return [...ordered, ...extra];
+  }
+
   function renderList() {
     const list = document.getElementById('qList');
     let entries = Object.entries(allQuestions).map(([id, q]) => ({ id, ...q }));
 
-    // Filter
     if (currentFilter === 'priority') entries = entries.filter(q => q.priority && !q.answered);
     else if (currentFilter === 'pending') entries = entries.filter(q => !q.answered);
     else if (currentFilter === 'answered') entries = entries.filter(q => q.answered);
 
-    // Sort: priority (not answered) first → newest; then pending newest; then answered
-    entries.sort((a, b) => {
-      const aScore = a.answered ? 0 : (a.priority ? 2 : 1);
-      const bScore = b.answered ? 0 : (b.priority ? 2 : 1);
-      if (aScore !== bScore) return bScore - aScore;
-      return (b.ts || 0) - (a.ts || 0);
-    });
+    entries = applyOrder(entries);
 
     if (entries.length === 0) {
-      list.innerHTML = '<div class="empty"><span class="icon">💬</span>No questions yet.</div>';
+      list.innerHTML = `<div class="empty"><span class="icon">💬</span>${T[lang].empty}</div>`;
+      if (sortableInst) { sortableInst.destroy(); sortableInst = null; }
       return;
     }
 
-    // Assign display numbers by timestamp order (oldest = Q1)
     const byTime = Object.entries(allQuestions).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0));
     const numMap = {};
     byTime.forEach(([id], i) => numMap[id] = i + 1);
 
     list.innerHTML = entries.map(q => cardHTML(q, numMap[q.id] || '?')).join('');
+
+    if (sortableInst) { sortableInst.destroy(); sortableInst = null; }
+    if (role === 'manager' && currentFilter === 'all') {
+      sortableInst = new Sortable(list, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: saveOrder
+      });
+    }
+  }
+
+  function saveOrder() {
+    const ids = Array.from(document.querySelectorAll('.q-card[data-qid]')).map(c => c.dataset.qid);
+    db.ref('questionOrder').set(ids);
   }
 
   function cardHTML(q, num) {
-    const cls = [
-      'q-card',
-      q.priority && !q.answered ? 'is-priority' : '',
-      q.answered ? 'is-answered' : ''
-    ].filter(Boolean).join(' ');
-
-    const badgeClass = q.directedTo === 'HE Metropolitan Pola' ? 'badge-metropolitan'
-                     : q.directedTo === 'HG Bishop Raphael' ? 'badge-bishop' : 'badge-general';
-
-    const priorityOn = q.priority ? 'on' : '';
-    const answeredOn  = q.answered ? 'on' : '';
-
-    const priorityLabel = q.priority ? '⭐ Priority' : '☆ Priority';
-    const answeredLabel  = q.answered ? '✓ Answered' : '○ Answered';
+    const t = T[lang];
+    const cls = ['q-card', q.priority && !q.answered ? 'is-priority' : '', q.answered ? 'is-answered' : ''].filter(Boolean).join(' ');
+    const badgeCls = q.directedTo === 'HE Metropolitan Pola' ? 'badge-metropolitan'
+                   : q.directedTo === 'HG Bishop Raphael' ? 'badge-bishop' : 'badge-general';
+    const priorityLabel = q.priority ? t.actPriorityOn : t.actPriority;
+    const answeredLabel = q.answered ? t.actAnsweredOn : t.actAnswered;
+    const dragHandle = role === 'manager' ? `<span class="drag-handle" title="Drag to reorder">⠿</span>` : '';
+    const priorityBtn = role === 'manager'
+      ? `<button class="act-btn act-priority ${q.priority ? 'on' : ''}" onclick="toggle('${q.id}','priority',${!!q.priority})">${priorityLabel}</button>` : '';
+    const deleteBtn = role === 'manager'
+      ? `<button class="act-btn act-delete" onclick="del('${q.id}')">${t.actDelete}</button>` : '';
 
     return `
-      <div class="${cls}" id="card-${q.id}">
+      <div class="${cls}" id="card-${q.id}" data-qid="${q.id}">
         <div class="q-meta">
           <span class="q-num">Q${num}</span>
-          <span class="q-badge ${badgeClass}">${q.directedTo || 'General'}</span>
-          ${q.priority && !q.answered ? '<span class="q-badge badge-priority">⭐ Priority</span>' : ''}
-          ${q.answered ? '<span class="q-badge badge-answered">✓ Done</span>' : ''}
+          <span class="q-badge ${badgeCls}">${escHtml(q.directedTo || 'General')}</span>
+          ${q.priority && !q.answered ? `<span class="q-badge badge-priority">⭐</span>` : ''}
+          ${q.answered ? `<span class="q-badge badge-answered">✓</span>` : ''}
           <span class="q-time">${timeAgo(q.ts)}</span>
+          ${dragHandle}
         </div>
         <div class="q-text">${escHtml(q.question || '')}</div>
         <div class="q-actions">
-          <button class="act-btn act-priority ${priorityOn}" onclick="toggle('${q.id}','priority',${q.priority})">
-            ${priorityLabel}
-          </button>
-          <button class="act-btn act-answered ${answeredOn}" onclick="toggle('${q.id}','answered',${q.answered})">
-            ${answeredLabel}
-          </button>
-          <button class="act-btn act-delete" onclick="del('${q.id}')">🗑 Delete</button>
+          ${priorityBtn}
+          <button class="act-btn act-answered ${q.answered ? 'on' : ''}" onclick="toggle('${q.id}','answered',${!!q.answered})">${answeredLabel}</button>
+          ${deleteBtn}
         </div>
       </div>`;
   }
@@ -401,21 +479,19 @@
   function del(id) {
     const q = allQuestions[id];
     const preview = q && q.question ? q.question.substring(0, 60) + (q.question.length > 60 ? '…' : '') : '';
-    if (!confirm(`Delete this question?\n\n"${preview}"\n\nThis cannot be undone.`)) return;
+    if (!confirm(T[lang].delConfirm(preview))) return;
     db.ref('questions/' + id).remove();
-    toast('Question deleted');
+    toast(T[lang].deleted);
   }
 
-  // ── QR Code ──
   let qrGenerated = false;
   function showQR() {
-    const modal = document.getElementById('qrModal');
-    modal.classList.add('show');
+    document.getElementById('qrModal').classList.add('show');
     if (!qrGenerated) {
-      const submitUrl = window.location.href.replace('questions-admin.html', 'questions-submit.html');
-      document.getElementById('qrUrl').textContent = submitUrl;
+      const url = window.location.href.replace('questions-admin.html', 'questions-submit.html');
+      document.getElementById('qrUrl').textContent = url;
       new QRCode(document.getElementById('qrCode'), {
-        text: submitUrl, width: 200, height: 200,
+        text: url, width: 200, height: 200,
         colorDark: '#7B1A1A', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.H
       });
       qrGenerated = true;
@@ -424,14 +500,14 @@
   function closeQR() { document.getElementById('qrModal').classList.remove('show'); }
   document.getElementById('qrModal').addEventListener('click', e => { if (e.target === document.getElementById('qrModal')) closeQR(); });
 
-  // ── Helpers ──
   function timeAgo(ts) {
+    const t = T[lang];
     if (!ts) return '';
     const s = Math.floor((Date.now() - ts) / 1000);
-    if (s < 60) return 'just now';
-    if (s < 3600) return Math.floor(s / 60) + ' min ago';
-    if (s < 86400) return Math.floor(s / 3600) + ' hr ago';
-    return Math.floor(s / 86400) + ' d ago';
+    if (s < 60) return t.justNow;
+    if (s < 3600) return t.minAgo(Math.floor(s / 60));
+    if (s < 86400) return t.hrAgo(Math.floor(s / 3600));
+    return t.dAgo(Math.floor(s / 86400));
   }
 
   function escHtml(str) {
@@ -439,13 +515,12 @@
   }
 
   function toast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2200);
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2200);
   }
 
-  // Refresh time-ago labels every minute
   setInterval(() => { if (listenerStarted) renderList(); }, 60000);
 </script>
 </body>
