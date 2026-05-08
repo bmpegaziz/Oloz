@@ -122,11 +122,6 @@
       </div>
 
       <div class="field">
-        <span class="lbl">Your name <span style="font-weight:400;color:#AAA;text-transform:none;letter-spacing:0">(optional)</span></span>
-        <input type="text" id="nameIn" placeholder="Leave blank to submit anonymously" maxlength="60">
-      </div>
-
-      <div class="field">
         <span class="lbl">Your question <span style="color:#E53E3E">*</span></span>
         <textarea id="qIn" placeholder="Type your question here…" maxlength="500" oninput="onType()"></textarea>
         <div class="field-foot">
@@ -200,7 +195,6 @@
       await db.ref('questions').push({
         question: q,
         directedTo: speaker,
-        name: document.getElementById('nameIn').value.trim() || 'Anonymous',
         ts: firebase.database.ServerValue.TIMESTAMP,
         priority: false,
         answered: false
@@ -217,7 +211,6 @@
 
   function reset() {
     document.getElementById('qIn').value = '';
-    document.getElementById('nameIn').value = '';
     document.getElementById('qCnt').textContent = '0';
     pick(document.querySelector('[data-val="General"]'));
     document.getElementById('formBody').classList.remove('gone');

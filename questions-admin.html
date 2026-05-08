@@ -382,7 +382,6 @@
           <span class="q-time">${timeAgo(q.ts)}</span>
         </div>
         <div class="q-text">${escHtml(q.question || '')}</div>
-        <div class="q-author">— ${escHtml(q.name || 'Anonymous')}</div>
         <div class="q-actions">
           <button class="act-btn act-priority ${priorityOn}" onclick="toggle('${q.id}','priority',${q.priority})">
             ${priorityLabel}
