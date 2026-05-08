@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#7B1A1A">
+  <title>Questions Admin · Faith, Truth &amp; Life 2026</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #7B1A1A; --red-dark: #5A1010; --gold: #C8A84B;
+      --bg: #F2EDE7; --card: #fff;
+      --border: #E0D5C8; --text: #1A0A0A; --muted: #777;
+      --answered-opacity: 0.45;
+    }
+    body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--text); }
+
+    /* ─── Setup banner ─── */
+    #setupBanner {
+      background: #FFF3CD; border-bottom: 2px solid #FFC107; padding: 12px 20px;
+      font-size: 13px; line-height: 1.6; display: none;
+    }
+    #setupBanner strong { color: #856404; }
+    #setupBanner ol { margin: 6px 0 0 20px; }
+    #setupBanner li { margin-bottom: 2px; }
+
+    /* ─── Login screen ─── */
+    #loginScreen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(160deg, #8B1A1A 0%, #4A0A0A 100%); padding: 24px;
+    }
+    .login-card { background: #fff; border-radius: 20px; padding: 36px 28px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+    .login-cross { color: var(--gold); font-size: 40px; display: block; margin-bottom: 10px; }
+    .login-card h1 { font-size: 20px; font-weight: 700; color: var(--red); margin-bottom: 4px; }
+    .login-card .sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .login-card input {
+      width: 100%; border: 2px solid var(--border); border-radius: 12px;
+      padding: 13px 16px; font-size: 16px; font-family: inherit; outline: none;
+      transition: border-color .15s; margin-bottom: 14px; -webkit-appearance: none;
+      letter-spacing: 3px; text-align: center;
+    }
+    .login-card input:focus { border-color: var(--red); }
+    .login-card input.shake { animation: shake .3s; border-color: #E53E3E; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-6px); }
+      40%,80% { transform: translateX(6px); }
+    }
+    .login-err { color: #E53E3E; font-size: 13px; margin-bottom: 12px; min-height: 18px; }
+    .btn-login {
+      width: 100%; background: var(--red); color: #fff; border: none; border-radius: 12px;
+      padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s;
+    }
+    .btn-login:hover { background: var(--red-dark); }
+
+    /* ─── Dashboard: topbar ─── */
+    #dashboard { display: none; min-height: 100vh; }
+    .topbar {
+      background: var(--red); color: #fff; padding: 0 16px;
+      display: flex; align-items: center; gap: 10px; height: 54px;
+      position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .topbar .title { font-size: 17px; font-weight: 700; flex: 1; }
+    .topbar .title span { color: var(--gold); }
+    .topbar-btn {
+      background: rgba(255,255,255,.15); border: none; color: #fff; border-radius: 8px;
+      padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s;
+    }
+    .topbar-btn:hover { background: rgba(255,255,255,.25); }
+
+    /* ─── Stats bar ─── */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
+      padding: 14px 12px 10px; background: #fff; border-bottom: 1px solid var(--border);
+    }
+    .stat { text-align: center; }
+    .stat .n { font-size: 22px; font-weight: 800; color: var(--red); }
+    .stat .l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-top: 1px; }
+    .stat.priority .n { color: var(--gold); }
+    .stat.pending .n { color: #2980B9; }
+    .stat.answered .n { color: #27AE60; }
+
+    /* ─── Filter tabs ─── */
+    .tabs {
+      display: flex; background: #fff; border-bottom: 1px solid var(--border);
+      position: sticky; top: 54px; z-index: 90;
+    }
+    .tab {
+      flex: 1; padding: 11px 4px; text-align: center; font-size: 13px; font-weight: 600;
+      color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent;
+      transition: all .15s; user-select: none; border-left: none; border-right: none;
+      border-top: none; background: transparent;
+    }
+    .tab.on { color: var(--red); border-bottom-color: var(--red); }
+
+    /* ─── Question list ─── */
+    .q-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; max-width: 720px; margin: 0 auto; }
+    .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 15px; }
+    .empty .icon { font-size: 40px; display: block; margin-bottom: 12px; opacity: .5; }
+
+    /* ─── Question card ─── */
+    .q-card {
+      background: var(--card); border-radius: 14px; padding: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07); border-left: 4px solid transparent;
+      transition: opacity .2s, border-color .2s;
+    }
+    .q-card.is-priority { border-left-color: var(--gold); }
+    .q-card.is-answered { opacity: var(--answered-opacity); }
+
+    .q-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .q-num { font-size: 12px; font-weight: 700; color: var(--muted); }
+    .q-badge {
+      font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .badge-general { background: #F0ECE8; color: #888; }
+    .badge-metropolitan { background: #EDE4F5; color: #6C3483; }
+    .badge-bishop { background: #E4EEF8; color: #1F618D; }
+    .badge-priority { background: #FEF9E7; color: #B7770D; }
+    .badge-answered { background: #EAFAF1; color: #1E8449; }
+
+    .q-time { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+    .q-text {
+      font-size: 15px; line-height: 1.55; color: var(--text); margin-bottom: 10px;
+      font-weight: 500;
+    }
+    .q-card.is-answered .q-text { text-decoration: line-through; }
+
+    .q-author { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+    .q-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .act-btn {
+      flex: 1; min-width: 90px; padding: 8px 10px; border-radius: 9px; font-size: 13px;
+      font-weight: 600; cursor: pointer; border: 2px solid transparent;
+      transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .act-priority { background: #FEF9E7; color: #B7770D; border-color: #F9E79F; }
+    .act-priority:hover, .act-priority.on { background: var(--gold); color: #fff; border-color: var(--gold); }
+    .act-answered { background: #EAFAF1; color: #1E8449; border-color: #A9DFBF; }
+    .act-answered:hover, .act-answered.on { background: #27AE60; color: #fff; border-color: #27AE60; }
+    .act-delete { background: #FDEDEC; color: #C0392B; border-color: #F1948A; }
+    .act-delete:hover { background: #E74C3C; color: #fff; border-color: #E74C3C; }
+
+    /* ─── QR Modal ─── */
+    #qrModal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      z-index: 200; align-items: center; justify-content: center; padding: 20px;
+    }
+    #qrModal.show { display: flex; }
+    .qr-card {
+      background: #fff; border-radius: 20px; padding: 28px 28px 24px;
+      text-align: center; width: 100%; max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    .qr-card h2 { font-size: 16px; font-weight: 700; color: var(--red); margin-bottom: 6px; }
+    .qr-card p { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+    #qrCode { display: flex; justify-content: center; margin-bottom: 16px; }
+    #qrCode canvas, #qrCode img { border-radius: 8px; }
+    .qr-url { font-size: 11px; color: var(--muted); word-break: break-all; background: #F5F0EB; padding: 8px 10px; border-radius: 8px; margin-bottom: 20px; }
+    .btn-close { background: var(--red); color: #fff; border: none; border-radius: 12px; padding: 11px 28px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-close:hover { background: var(--red-dark); }
+
+    /* ─── Toast ─── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #333; color: #fff; padding: 10px 20px; border-radius: 24px;
+      font-size: 14px; font-weight: 600; transition: transform .25s; z-index: 300; white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- ── Setup Banner (shown when Firebase config is placeholder) ── -->
+<div id="setupBanner">
+  <strong>⚠️ Firebase Setup Required</strong> — Replace the placeholder values in this file before use.<br>
+  <ol>
+    <li>Go to <strong>console.firebase.google.com</strong> → Create project → Add web app</li>
+    <li>Enable <strong>Realtime Database</strong> (Build → Realtime Database → Create in test mode)</li>
+    <li>In <em>Project Settings → Your Apps → Config</em>, copy the config object</li>
+    <li>In both <code>questions-submit.html</code> and <code>questions-admin.html</code>, replace the <code>REPLACE_WITH_...</code> values</li>
+  </ol>
+</div>
+
+<!-- ── Login Screen ── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <span class="login-cross">☩</span>
+    <h1>Convention Questions</h1>
+    <p class="sub">Admin Dashboard · Enter password to continue</p>
+    <input type="password" id="pwIn" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
+    <div class="login-err" id="pwErr"></div>
+    <button class="btn-login" onclick="login()">Sign In</button>
+  </div>
+</div>
+
+<!-- ── Dashboard ── -->
+<div id="dashboard">
+  <div class="topbar">
+    <div class="title">☩ <span>Faith, Truth &amp; Life</span> Questions</div>
+    <button class="topbar-btn" onclick="showQR()">📱 QR Code</button>
+    <button class="topbar-btn" onclick="logout()">Sign Out</button>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="n" id="sTotal">0</div><div class="l">Total</div></div>
+    <div class="stat priority"><div class="n" id="sPriority">0</div><div class="l">Priority</div></div>
+    <div class="stat pending"><div class="n" id="sPending">0</div><div class="l">Pending</div></div>
+    <div class="stat answered"><div class="n" id="sAnswered">0</div><div class="l">Answered</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" data-f="all" onclick="setFilter(this)">All</button>
+    <button class="tab" data-f="priority" onclick="setFilter(this)">⭐ Priority</button>
+    <button class="tab" data-f="pending" onclick="setFilter(this)">Pending</button>
+    <button class="tab" data-f="answered" onclick="setFilter(this)">Answered</button>
+  </div>
+
+  <div class="q-list" id="qList"></div>
+</div>
+
+<!-- ── QR Modal ── -->
+<div id="qrModal">
+  <div class="qr-card">
+    <h2>Scan to Submit Questions</h2>
+    <p>Share this QR code on screen or print it for attendees</p>
+    <div id="qrCode"></div>
+    <div class="qr-url" id="qrUrl"></div>
+    <button class="btn-close" onclick="closeQR()">Close</button>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<script>
+  // ╔══════════════════════════════════════════════════════════════╗
+  // ║  FIREBASE SETUP — Replace all REPLACE_WITH_... values below ║
+  // ║  Same config as questions-submit.html                        ║
+  // ╚══════════════════════════════════════════════════════════════╝
+  const firebaseConfig = {
+    apiKey:            "AIzaSyDu2nyYD0PmzGmPXrz8UCuswByXloTqSF8",
+    authDomain:        "questions-13ca4.firebaseapp.com",
+    databaseURL:       "https://questions-13ca4-default-rtdb.firebaseio.com",
+    projectId:         "questions-13ca4",
+    storageBucket:     "questions-13ca4.firebasestorage.app",
+    messagingSenderId: "719956991966",
+    appId:             "1:719956991966:web:ab885aebfb52c44b09c74f"
+  };
+
+  const ADMIN_PASSWORD = "Coptic2026";
+
+  // Show setup banner if config is still placeholder
+  if (firebaseConfig.apiKey === "REPLACE_WITH_YOUR_API_KEY") {
+    document.getElementById('setupBanner').style.display = 'block';
+  }
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // ── Auth ──
+  function login() {
+    const pw = document.getElementById('pwIn').value;
+    if (pw === ADMIN_PASSWORD) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      sessionStorage.setItem('ftl_auth', '1');
+      startListener();
+    } else {
+      const input = document.getElementById('pwIn');
+      input.classList.add('shake');
+      setTimeout(() => input.classList.remove('shake'), 350);
+      document.getElementById('pwErr').textContent = 'Incorrect password. Try again.';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem('ftl_auth');
+    location.reload();
+  }
+
+  // Auto-login if already authenticated this session
+  if (sessionStorage.getItem('ftl_auth')) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    startListener();
+  }
+
+  // ── Data ──
+  let allQuestions = {};
+  let currentFilter = 'all';
+  let listenerStarted = false;
+
+  function startListener() {
+    if (listenerStarted) return;
+    listenerStarted = true;
+    db.ref('questions').on('value', snap => {
+      allQuestions = snap.val() || {};
+      updateStats();
+      renderList();
+    });
+  }
+
+  function updateStats() {
+    const qs = Object.values(allQuestions);
+    const total = qs.length;
+    const priority = qs.filter(q => q.priority && !q.answered).length;
+    const answered = qs.filter(q => q.answered).length;
+    const pending = qs.filter(q => !q.answered).length;
+    document.getElementById('sTotal').textContent = total;
+    document.getElementById('sPriority').textContent = priority;
+    document.getElementById('sPending').textContent = pending;
+    document.getElementById('sAnswered').textContent = answered;
+  }
+
+  function setFilter(el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    el.classList.add('on');
+    currentFilter = el.dataset.f;
+    renderList();
+  }
+
+  function renderList() {
+    const list = document.getElementById('qList');
+    let entries = Object.entries(allQuestions).map(([id, q]) => ({ id, ...q }));
+
+    // Filter
+    if (currentFilter === 'priority') entries = entries.filter(q => q.priority && !q.answered);
+    else if (currentFilter === 'pending') entries = entries.filter(q => !q.answered);
+    else if (currentFilter === 'answered') entries = entries.filter(q => q.answered);
+
+    // Sort: priority (not answered) first → newest; then pending newest; then answered
+    entries.sort((a, b) => {
+      const aScore = a.answered ? 0 : (a.priority ? 2 : 1);
+      const bScore = b.answered ? 0 : (b.priority ? 2 : 1);
+      if (aScore !== bScore) return bScore - aScore;
+      return (b.ts || 0) - (a.ts || 0);
+    });
+
+    if (entries.length === 0) {
+      list.innerHTML = '<div class="empty"><span class="icon">💬</span>No questions yet.</div>';
+      return;
+    }
+
+    // Assign display numbers by timestamp order (oldest = Q1)
+    const byTime = Object.entries(allQuestions).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0));
+    const numMap = {};
+    byTime.forEach(([id], i) => numMap[id] = i + 1);
+
+    list.innerHTML = entries.map(q => cardHTML(q, numMap[q.id] || '?')).join('');
+  }
+
+  function cardHTML(q, num) {
+    const cls = [
+      'q-card',
+      q.priority && !q.answered ? 'is-priority' : '',
+      q.answered ? 'is-answered' : ''
+    ].filter(Boolean).join(' ');
+
+    const badgeClass = q.directedTo === 'HE Metropolitan Pola' ? 'badge-metropolitan'
+                     : q.directedTo === 'HG Bishop Raphael' ? 'badge-bishop' : 'badge-general';
+
+    const priorityOn = q.priority ? 'on' : '';
+    const answeredOn  = q.answered ? 'on' : '';
+
+    const priorityLabel = q.priority ? '⭐ Priority' : '☆ Priority';
+    const answeredLabel  = q.answered ? '✓ Answered' : '○ Answered';
+
+    return `
+      <div class="${cls}" id="card-${q.id}">
+        <div class="q-meta">
+          <span class="q-num">Q${num}</span>
+          <span class="q-badge ${badgeClass}">${q.directedTo || 'General'}</span>
+          ${q.priority && !q.answered ? '<span class="q-badge badge-priority">⭐ Priority</span>' : ''}
+          ${q.answered ? '<span class="q-badge badge-answered">✓ Done</span>' : ''}
+          <span class="q-time">${timeAgo(q.ts)}</span>
+        </div>
+        <div class="q-text">${escHtml(q.question || '')}</div>
+        <div class="q-author">— ${escHtml(q.name || 'Anonymous')}</div>
+        <div class="q-actions">
+          <button class="act-btn act-priority ${priorityOn}" onclick="toggle('${q.id}','priority',${q.priority})">
+            ${priorityLabel}
+          </button>
+          <button class="act-btn act-answered ${answeredOn}" onclick="toggle('${q.id}','answered',${q.answered})">
+            ${answeredLabel}
+          </button>
+          <button class="act-btn act-delete" onclick="del('${q.id}')">🗑 Delete</button>
+        </div>
+      </div>`;
+  }
+
+  async function toggle(id, field, current) {
+    await db.ref('questions/' + id).update({ [field]: !current });
+  }
+
+  function del(id) {
+    const q = allQuestions[id];
+    const preview = q && q.question ? q.question.substring(0, 60) + (q.question.length > 60 ? '…' : '') : '';
+    if (!confirm(`Delete this question?\n\n"${preview}"\n\nThis cannot be undone.`)) return;
+    db.ref('questions/' + id).remove();
+    toast('Question deleted');
+  }
+
+  // ── QR Code ──
+  let qrGenerated = false;
+  function showQR() {
+    const modal = document.getElementById('qrModal');
+    modal.classList.add('show');
+    if (!qrGenerated) {
+      const submitUrl = window.location.href.replace('questions-admin.html', 'questions-submit.html');
+      document.getElementById('qrUrl').textContent = submitUrl;
+      new QRCode(document.getElementById('qrCode'), {
+        text: submitUrl, width: 200, height: 200,
+        colorDark: '#7B1A1A', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.H
+      });
+      qrGenerated = true;
+    }
+  }
+  function closeQR() { document.getElementById('qrModal').classList.remove('show'); }
+  document.getElementById('qrModal').addEventListener('click', e => { if (e.target === document.getElementById('qrModal')) closeQR(); });
+
+  // ── Helpers ──
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s / 60) + ' min ago';
+    if (s < 86400) return Math.floor(s / 3600) + ' hr ago';
+    return Math.floor(s / 86400) + ' d ago';
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // Refresh time-ago labels every minute
+  setInterval(() => { if (listenerStarted) renderList(); }, 60000);
+</script>
+</body>
+</html>
