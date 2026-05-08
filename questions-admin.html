@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#7B1A1A">
-  <title>Questions Admin · CLC 2026</title>
+  <title>Questions Admin · Faith, Truth &amp; Life 2026</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -190,7 +190,7 @@
 <div id="loginScreen">
   <div class="login-card">
     <span class="login-cross">☩</span>
-    <h1>CLC 2026 Questions</h1>
+    <h1>Convention Questions</h1>
     <p class="sub">Admin Dashboard · Enter password to continue</p>
     <input type="password" id="pwIn" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
     <div class="login-err" id="pwErr"></div>
@@ -201,7 +201,7 @@
 <!-- ── Dashboard ── -->
 <div id="dashboard">
   <div class="topbar">
-    <div class="title">☩ <span>CLC 2026</span> Questions</div>
+    <div class="title">☩ <span>Faith, Truth &amp; Life</span> Questions</div>
     <button class="topbar-btn" onclick="showQR()">📱 QR Code</button>
     <button class="topbar-btn" onclick="logout()">Sign Out</button>
   </div>
@@ -268,7 +268,7 @@
     if (pw === ADMIN_PASSWORD) {
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
-      sessionStorage.setItem('clc_auth', '1');
+      sessionStorage.setItem('ftl_auth', '1');
       startListener();
     } else {
       const input = document.getElementById('pwIn');
@@ -281,12 +281,12 @@
   }
 
   function logout() {
-    sessionStorage.removeItem('clc_auth');
+    sessionStorage.removeItem('ftl_auth');
     location.reload();
   }
 
   // Auto-login if already authenticated this session
-  if (sessionStorage.getItem('clc_auth')) {
+  if (sessionStorage.getItem('ftl_auth')) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     startListener();
