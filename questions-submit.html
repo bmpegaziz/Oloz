@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -10,25 +10,19 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --red: #7B1A1A;
-      --red-dark: #5A1010;
-      --gold: #C8A84B;
-      --border: #E0D5C8;
-      --text: #1A0A0A;
-      --muted: #777;
-    }
-    body {
-      background: linear-gradient(160deg, #8B1A1A 0%, #4A0A0A 100%);
-      min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      padding: 16px 16px 40px;
-    }
+    :root { --red: #7B1A1A; --red-dark: #5A1010; --gold: #C8A84B; --border: #E0D5C8; --text: #1A0A0A; --muted: #777; }
+    body { background: linear-gradient(160deg, #8B1A1A 0%, #4A0A0A 100%); min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px 16px 40px; }
     .page { max-width: 440px; margin: 0 auto; }
 
+    /* ── Lang toggle ── */
+    .lang-bar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+    .lang-toggle { display: flex; background: rgba(255,255,255,.15); border-radius: 20px; padding: 3px; }
+    .lang-btn { background: transparent; border: none; color: rgba(255,255,255,.75); padding: 5px 13px; border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .lang-btn.active { background: #fff; color: var(--red); }
+
     /* ── Header ── */
-    .header { text-align: center; padding: 20px 0 22px; }
-    .cross { color: var(--gold); font-size: 42px; display: block; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(0,0,0,.3); }
+    .header { text-align: center; padding: 8px 0 22px; }
+    .logo { width: 80px; height: auto; display: block; margin: 0 auto 10px; filter: drop-shadow(0 2px 8px rgba(0,0,0,.3)); }
     .header h1 { color: #fff; font-size: 20px; font-weight: 700; line-height: 1.25; margin-bottom: 5px; }
     .header .sub { color: rgba(255,255,255,.6); font-size: 12px; }
 
@@ -39,38 +33,31 @@
     /* ── Speaker buttons ── */
     .lbl { font-size: 11px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; display: block; }
     .speakers { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-    .spk { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; background: #fff; transition: all .15s; width: 100%; text-align: left; }
+    .spk { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; background: #fff; transition: all .15s; width: 100%; text-align: left; font-family: inherit; }
+    [dir="rtl"] .spk { text-align: right; }
     .spk:hover { border-color: #C09090; background: #FDF6F6; }
     .spk.on { border-color: var(--red); background: #FDF5F5; }
     .av { width: 38px; height: 38px; border-radius: 50%; background: #F0E8E0; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; transition: background .15s; }
     .spk.on .av { background: var(--red); }
+    .si { flex: 1; min-width: 0; }
     .si .nm { font-size: 14px; font-weight: 600; color: var(--text); }
     .si .rl { font-size: 11px; color: var(--muted); margin-top: 1px; }
-    .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); margin-left: auto; flex-shrink: 0; position: relative; transition: all .15s; }
+    .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; position: relative; transition: all .15s; }
     .spk.on .dot { border-color: var(--red); background: var(--red); }
     .spk.on .dot::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; border-radius: 50%; background: #fff; }
 
-    /* ── Fields ── */
+    /* ── Field ── */
     .field { margin-bottom: 18px; }
-    .field input, .field textarea {
-      width: 100%; border: 2px solid var(--border); border-radius: 12px; padding: 12px 14px;
-      font-size: 16px; font-family: inherit; color: var(--text); outline: none;
-      transition: border-color .15s; -webkit-appearance: none; background: #fff;
-    }
-    .field input::placeholder, .field textarea::placeholder { color: #BBADA0; }
-    .field input:focus, .field textarea:focus { border-color: var(--red); }
-    .field input.err, .field textarea.err { border-color: #E53E3E; }
-    .field textarea { min-height: 110px; resize: none; line-height: 1.5; }
+    .field textarea { width: 100%; border: 2px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 16px; font-family: inherit; color: var(--text); outline: none; transition: border-color .15s; -webkit-appearance: none; background: #fff; min-height: 110px; resize: none; line-height: 1.5; }
+    .field textarea::placeholder { color: #BBADA0; }
+    .field textarea:focus { border-color: var(--red); }
+    .field textarea.err { border-color: #E53E3E; }
     .field-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
     .err-msg { font-size: 12px; color: #E53E3E; }
-    .cnt { font-size: 12px; color: #BBB; margin-left: auto; }
+    .cnt { font-size: 12px; color: #BBB; }
 
     /* ── Submit ── */
-    .btn-submit {
-      width: 100%; background: var(--red); color: #fff; border: none; border-radius: 14px;
-      padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: .3px;
-      transition: background .15s, transform .1s;
-    }
+    .btn-submit { width: 100%; background: var(--red); color: #fff; border: none; border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: .3px; transition: background .15s, transform .1s; font-family: inherit; }
     .btn-submit:hover { background: var(--red-dark); }
     .btn-submit:active { transform: scale(.98); }
     .btn-submit:disabled { background: #CCC; cursor: not-allowed; }
@@ -83,7 +70,7 @@
     @keyframes pop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     .success h2 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
     .success p { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 24px; }
-    .btn-again { background: transparent; border: 2px solid var(--red); color: var(--red); border-radius: 12px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .btn-again { background: transparent; border: 2px solid var(--red); color: var(--red); border-radius: 12px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit; }
     .btn-again:hover { background: var(--red); color: #fff; }
 
     /* ── Footer ── */
@@ -92,64 +79,75 @@
 </head>
 <body>
 <div class="page">
+  <div class="lang-bar">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('ar')">عربي</button>
+    </div>
+  </div>
+
   <div class="header">
-    <span class="cross">☩</span>
-    <h1>Faith, Truth &amp; Life Convention</h1>
-    <p class="sub">May 9th, 2026 · Diocese of New York &amp; New England</p>
+    <img src="logo.png" class="logo" alt="Logo">
+    <h1 id="t-title"></h1>
+    <p class="sub" id="t-sub"></p>
   </div>
 
   <div class="card">
-    <div class="card-title">✏️ Submit Your Question</div>
+    <div class="card-title" id="t-cardTitle"></div>
 
     <div class="form-body" id="formBody">
-      <span class="lbl">Direct your question to</span>
+      <span class="lbl" id="t-directTo"></span>
       <div class="speakers">
         <button class="spk on" data-val="General" onclick="pick(this)">
           <div class="av">🌐</div>
-          <div class="si"><div class="nm">General Question</div><div class="rl">For all speakers or the panel</div></div>
+          <div class="si">
+            <div class="nm" id="t-genName"></div>
+            <div class="rl" id="t-genRole"></div>
+          </div>
           <div class="dot"></div>
         </button>
         <button class="spk" data-val="HE Metropolitan Pola" onclick="pick(this)">
           <div class="av">✝</div>
-          <div class="si"><div class="nm">HE Metropolitan Pola</div><div class="rl">Metropolitan</div></div>
+          <div class="si">
+            <div class="nm" id="t-metroName"></div>
+            <div class="rl" id="t-metroRole"></div>
+          </div>
           <div class="dot"></div>
         </button>
         <button class="spk" data-val="HG Bishop Raphael" onclick="pick(this)">
           <div class="av">✝</div>
-          <div class="si"><div class="nm">HG Bishop Raphael</div><div class="rl">Bishop</div></div>
+          <div class="si">
+            <div class="nm" id="t-bishopName"></div>
+            <div class="rl" id="t-bishopRole"></div>
+          </div>
           <div class="dot"></div>
         </button>
       </div>
 
       <div class="field">
-        <span class="lbl">Your question <span style="color:#E53E3E">*</span></span>
-        <textarea id="qIn" placeholder="Type your question here…" maxlength="500" oninput="onType()"></textarea>
+        <span class="lbl" id="t-qLabel"></span>
+        <textarea id="qIn" maxlength="500" oninput="onType()"></textarea>
         <div class="field-foot">
           <span class="err-msg" id="qErr"></span>
           <span class="cnt"><span id="qCnt">0</span>/500</span>
         </div>
       </div>
 
-      <button class="btn-submit" id="subBtn" onclick="doSubmit()">Submit Question ☩</button>
+      <button class="btn-submit" id="subBtn" onclick="doSubmit()"></button>
     </div>
 
     <div class="success" id="successBox">
       <div class="tick">✓</div>
-      <h2>Question Submitted!</h2>
-      <p>Thank you! Your question has been received and will be reviewed by the organizers.</p>
-      <button class="btn-again" onclick="reset()">Submit Another Question</button>
+      <h2 id="t-successTitle"></h2>
+      <p id="t-successMsg"></p>
+      <button class="btn-again" onclick="reset()" id="t-again"></button>
     </div>
   </div>
 
-  <div class="footer">Coptic Orthodox Patriarchate · May 9th, 2026</div>
+  <div class="footer" id="t-footer"></div>
 </div>
 
 <script>
-  // ╔══════════════════════════════════════════════════════════════╗
-  // ║  FIREBASE SETUP — Replace all REPLACE_WITH_... values below ║
-  // ║  Firebase Console → Project Settings → Your Apps →          ║
-  // ║  Web App → SDK setup & config → Config                      ║
-  // ╚══════════════════════════════════════════════════════════════╝
   const firebaseConfig = {
     apiKey:            "AIzaSyDu2nyYD0PmzGmPXrz8UCuswByXloTqSF8",
     authDomain:        "questions-13ca4.firebaseapp.com",
@@ -159,9 +157,80 @@
     messagingSenderId: "719956991966",
     appId:             "1:719956991966:web:ab885aebfb52c44b09c74f"
   };
-
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+
+  const T = {
+    en: {
+      title: 'Faith, Truth & Life Convention',
+      sub: 'May 9th, 2026 · Diocese of New York & New England',
+      cardTitle: '✏️ Submit Your Question',
+      directTo: 'Direct your question to',
+      genName: 'General Question', genRole: 'For all speakers or the panel',
+      metroName: 'HE Metropolitan Pola', metroRole: 'Metropolitan',
+      bishopName: 'HG Bishop Raphael', bishopRole: 'Bishop',
+      qLabel: 'Your question *',
+      placeholder: 'Type your question here…',
+      submit: 'Submit Question ☩', submitting: 'Submitting…',
+      successTitle: 'Question Submitted!',
+      successMsg: 'Thank you! Your question has been received and will be reviewed by the organizers.',
+      again: 'Submit Another Question',
+      footer: 'Coptic Orthodox Patriarchate · May 9th, 2026',
+      errEmpty: 'Please enter your question.',
+      errNet: 'Could not submit. Check your internet connection and try again.',
+    },
+    ar: {
+      title: 'مؤتمر الإيمان والحق والحياة',
+      sub: '٩ مايو ٢٠٢٦ · أبرشية نيويورك ونيو إنجلاند',
+      cardTitle: '✏️ أرسل سؤالك',
+      directTo: 'وجّه سؤالك إلى',
+      genName: 'سؤال عام', genRole: 'لجميع المتحدثين أو الهيئة',
+      metroName: 'صاحب النيافة المطران بولا', metroRole: 'مطران',
+      bishopName: 'صاحب النيافة الأنبا رفائيل', bishopRole: 'أسقف',
+      qLabel: 'سؤالك *',
+      placeholder: 'اكتب سؤالك هنا…',
+      submit: 'إرسال السؤال ☩', submitting: 'جارٍ الإرسال…',
+      successTitle: 'تم إرسال السؤال!',
+      successMsg: 'شكراً لك! تم استلام سؤالك وسيتم مراجعته من قِبل المنظمين.',
+      again: 'إرسال سؤال آخر',
+      footer: 'الكنيسة القبطية الأرثوذكسية · ٩ مايو ٢٠٢٦',
+      errEmpty: 'يرجى كتابة سؤالك.',
+      errNet: 'تعذّر الإرسال. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
+    }
+  };
+
+  let lang = localStorage.getItem('ftl_lang') || 'en';
+
+  function setLang(l) {
+    lang = l;
+    localStorage.setItem('ftl_lang', l);
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.toggle('active', (l === 'en' && b.textContent === 'EN') || (l === 'ar' && b.textContent === 'عربي'));
+    });
+    const t = T[l];
+    document.getElementById('t-title').textContent = t.title;
+    document.getElementById('t-sub').textContent = t.sub;
+    document.getElementById('t-cardTitle').textContent = t.cardTitle;
+    document.getElementById('t-directTo').textContent = t.directTo;
+    document.getElementById('t-genName').textContent = t.genName;
+    document.getElementById('t-genRole').textContent = t.genRole;
+    document.getElementById('t-metroName').textContent = t.metroName;
+    document.getElementById('t-metroRole').textContent = t.metroRole;
+    document.getElementById('t-bishopName').textContent = t.bishopName;
+    document.getElementById('t-bishopRole').textContent = t.bishopRole;
+    document.getElementById('t-qLabel').textContent = t.qLabel;
+    document.getElementById('qIn').placeholder = t.placeholder;
+    document.getElementById('t-successTitle').textContent = t.successTitle;
+    document.getElementById('t-successMsg').textContent = t.successMsg;
+    document.getElementById('t-again').textContent = t.again;
+    document.getElementById('t-footer').textContent = t.footer;
+    const btn = document.getElementById('subBtn');
+    if (!btn.disabled) btn.textContent = t.submit;
+  }
+
+  setLang(lang);
 
   let speaker = 'General';
 
@@ -182,42 +251,43 @@
 
   async function doSubmit() {
     const q = document.getElementById('qIn').value.trim();
+    const t = T[lang];
     if (!q) {
       document.getElementById('qIn').classList.add('err');
-      document.getElementById('qErr').textContent = 'Please enter your question.';
+      document.getElementById('qErr').textContent = t.errEmpty;
       document.getElementById('qIn').focus();
       return;
     }
     const btn = document.getElementById('subBtn');
     btn.disabled = true;
-    btn.textContent = 'Submitting…';
+    btn.textContent = t.submitting;
     try {
       await db.ref('questions').push({
-        question: q,
-        directedTo: speaker,
+        question: q, directedTo: speaker,
         ts: firebase.database.ServerValue.TIMESTAMP,
-        priority: false,
-        answered: false
+        priority: false, answered: false
       });
       document.getElementById('formBody').classList.add('gone');
       document.getElementById('successBox').classList.add('show');
     } catch (e) {
       console.error(e);
       btn.disabled = false;
-      btn.textContent = 'Submit Question ☩';
-      alert('Could not submit. Check your internet connection and try again.');
+      btn.textContent = t.submit;
+      alert(t.errNet);
     }
   }
 
   function reset() {
     document.getElementById('qIn').value = '';
     document.getElementById('qCnt').textContent = '0';
+    document.getElementById('qErr').textContent = '';
+    document.getElementById('qIn').classList.remove('err');
     pick(document.querySelector('[data-val="General"]'));
     document.getElementById('formBody').classList.remove('gone');
     document.getElementById('successBox').classList.remove('show');
     const btn = document.getElementById('subBtn');
     btn.disabled = false;
-    btn.textContent = 'Submit Question ☩';
+    btn.textContent = T[lang].submit;
   }
 </script>
 </body>
